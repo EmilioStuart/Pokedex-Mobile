@@ -15,7 +15,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class DetailActivity extends AppCompatActivity {
 
     private ImageView pokemonSprite;
-    private TextView pokemonNumber, pokemonName, pokemonHeight, pokemonWeight;
+    private TextView pokemonNumber, pokemonName, pokemonHeight, pokemonWeight, pokemonDescription;
     private LinearLayout typesContainer;
     private LinearLayout individualStatsContainer;
     private PokeApiService pokeApiService;
@@ -30,11 +30,11 @@ public class DetailActivity extends AppCompatActivity {
         setupRetrofit();
         populateTypeBackgrounds();
 
-        // Ao iniciar a Activity, eu recupero o ID do Pokémon passado pelo Intent.
-        // Se o ID for inválido (-1), eu encerro a Activity para evitar erro.
         int pokemonId = getIntent().getIntExtra("POKEMON_ID", -1);
         if (pokemonId != -1) {
+            // Eu disparo as duas chamadas de API em paralelo para otimizar o tempo de carregamento.
             fetchPokemonDetails(pokemonId);
+            fetchPokemonSpecies(pokemonId);
         } else {
             Toast.makeText(this, "Erro: ID do Pokémon não encontrado", Toast.LENGTH_SHORT).show();
             finish();
@@ -47,6 +47,7 @@ public class DetailActivity extends AppCompatActivity {
         pokemonName = findViewById(R.id.tv_detail_name);
         pokemonHeight = findViewById(R.id.tv_detail_height);
         pokemonWeight = findViewById(R.id.tv_detail_weight);
+        pokemonDescription = findViewById(R.id.tv_pokemon_description);
         typesContainer = findViewById(R.id.ll_detail_types_container);
         individualStatsContainer = findViewById(R.id.ll_individual_stats_container);
     }
@@ -77,12 +78,35 @@ public class DetailActivity extends AppCompatActivity {
         });
     }
 
+    // Eu crio este novo método para buscar os dados da "espécie", que contém a descrição.
+    private void fetchPokemonSpecies(int pokemonId) {
+        pokeApiService.getPokemonSpecies(pokemonId).enqueue(new Callback<PokemonSpecies>() {
+            @Override
+            public void onResponse(Call<PokemonSpecies> call, Response<PokemonSpecies> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // A API retorna múltiplas descrições; eu preciso filtrar para encontrar a primeira em inglês.
+                    for (PokemonSpecies.FlavorTextEntry entry : response.body().getFlavorTextEntries()) {
+                        if (entry.getLanguage().getName().equals("en")) {
+                            // Eu limpo o texto de caracteres especiais como quebras de linha.
+                            String cleanedText = entry.getFlavorText().replace('\n', ' ').replace('\f', ' ');
+                            pokemonDescription.setText(cleanedText);
+                            return; // Eu encerro o loop assim que encontrar a primeira correspondência.
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PokemonSpecies> call, Throwable t) {
+                // Eu opto por uma falha silenciosa aqui, pois a descrição não é um dado crítico para a tela.
+            }
+        });
+    }
+
     private void populateUI(PokemonDetail detail) {
         pokemonName.setText(detail.getName().substring(0, 1).toUpperCase() + detail.getName().substring(1));
         pokemonNumber.setText(String.format(Locale.getDefault(), "Nº %04d", detail.getId()));
 
-        // A PokeAPI fornece altura em decímetros e peso em hectogramas. Eu converto
-        // esses valores para metros e quilogramas, respectivamente, antes de exibi-los.
         float heightInMeters = detail.getHeight() / 10.0f;
         float weightInKg = detail.getWeight() / 10.0f;
         pokemonHeight.setText(String.format(Locale.getDefault(), "%.1f m", heightInMeters));
@@ -105,10 +129,6 @@ public class DetailActivity extends AppCompatActivity {
         populateIndividualStats(detail);
     }
 
-    // Eu gero dinamicamente a seção de status. Para cada status recebido da API, eu
-    // inflo um layout de item (stat_item_layout), preencho seus componentes e o
-    // adiciono ao container. A ordem dos rótulos (HP, Ataque, etc.) pressupõe
-    // a mesma ordem de retorno da API.
     private void populateIndividualStats(PokemonDetail detail) {
         individualStatsContainer.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
@@ -117,7 +137,7 @@ public class DetailActivity extends AppCompatActivity {
             List<String> statLabels = Arrays.asList("HP", "Ataque", "Defesa", "Atq. Esp.", "Def. Esp.", "Velocidade");
 
             for (int i = 0; i < detail.getStats().size(); i++) {
-                if (i >= statLabels.size()) break; // Proteção contra listas de tamanhos diferentes
+                if (i >= statLabels.size()) break;
 
                 View statRowView = inflater.inflate(R.layout.stat_item_layout, individualStatsContainer, false);
 
@@ -163,9 +183,6 @@ public class DetailActivity extends AppCompatActivity {
         return typeTextView;
     }
 
-    // Criei este método utilitário para converter unidades de densidade de pixel (DP)
-    // em pixels brutos. Isso é essencial para garantir que as dimensões definidas
-    // programaticamente se adaptem corretamente a diferentes densidades de tela.
     private int dpToPx(int dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
     }
