@@ -1,15 +1,24 @@
-*.iml
+# Arquivos gerados pelo sistema de build
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+/build/
+
+# Pastas do Android Studio e IntelliJ
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
+/.idea/caches/
+/.idea/libraries/
 /.idea/modules.xml
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 .DS_Store
-/build
-/captures
+
+# Arquivos de log e cache
+/captures/
 .externalNativeBuild
-.cxx
-local.properties
+.cxx/
+*.hprof

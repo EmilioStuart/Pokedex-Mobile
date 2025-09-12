@@ -1,23 +1,15 @@
 package com.example.pokmon;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.TypedValue;
-import android.view.Gravity;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.view.*;
+import android.widget.*;
+import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
+import java.util.*;
+import retrofit2.*;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class DetailActivity extends AppCompatActivity {
@@ -25,8 +17,9 @@ public class DetailActivity extends AppCompatActivity {
     private ImageView pokemonSprite;
     private TextView pokemonNumber, pokemonName, pokemonHeight, pokemonWeight;
     private LinearLayout typesContainer;
+    private LinearLayout individualStatsContainer;
     private PokeApiService pokeApiService;
-    private Map<String, Integer> typeBackgrounds = new HashMap<>();
+    private final Map<String, Integer> typeBackgrounds = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,15 +30,14 @@ public class DetailActivity extends AppCompatActivity {
         setupRetrofit();
         populateTypeBackgrounds();
 
-        // Eu recupero o ID do Pokémon que foi passado pela MainActivity.
+        // Ao iniciar a Activity, eu recupero o ID do Pokémon passado pelo Intent.
+        // Se o ID for inválido (-1), eu encerro a Activity para evitar erro.
         int pokemonId = getIntent().getIntExtra("POKEMON_ID", -1);
-
-        // Eu verifico se o ID é válido antes de fazer a chamada de rede.
         if (pokemonId != -1) {
             fetchPokemonDetails(pokemonId);
         } else {
             Toast.makeText(this, "Erro: ID do Pokémon não encontrado", Toast.LENGTH_SHORT).show();
-            finish(); // Fecha a activity se não houver ID
+            finish();
         }
     }
 
@@ -56,6 +48,7 @@ public class DetailActivity extends AppCompatActivity {
         pokemonHeight = findViewById(R.id.tv_detail_height);
         pokemonWeight = findViewById(R.id.tv_detail_weight);
         typesContainer = findViewById(R.id.ll_detail_types_container);
+        individualStatsContainer = findViewById(R.id.ll_individual_stats_container);
     }
 
     private void setupRetrofit() {
@@ -67,7 +60,6 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void fetchPokemonDetails(int pokemonId) {
-        // Eu uso o ID recebido para fazer uma chamada específica para os detalhes deste Pokémon.
         pokeApiService.getPokemonDetail(String.valueOf(pokemonId)).enqueue(new Callback<PokemonDetail>() {
             @Override
             public void onResponse(Call<PokemonDetail> call, Response<PokemonDetail> response) {
@@ -86,24 +78,22 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void populateUI(PokemonDetail detail) {
-        // Eu preencho todos os campos da UI com os dados recebidos da API.
         pokemonName.setText(detail.getName().substring(0, 1).toUpperCase() + detail.getName().substring(1));
         pokemonNumber.setText(String.format(Locale.getDefault(), "Nº %04d", detail.getId()));
 
-        // A API retorna altura em decímetros e peso em hectogramas. Eu converto para metros e kg.
+        // A PokeAPI fornece altura em decímetros e peso em hectogramas. Eu converto
+        // esses valores para metros e quilogramas, respectivamente, antes de exibi-los.
         float heightInMeters = detail.getHeight() / 10.0f;
         float weightInKg = detail.getWeight() / 10.0f;
         pokemonHeight.setText(String.format(Locale.getDefault(), "%.1f m", heightInMeters));
         pokemonWeight.setText(String.format(Locale.getDefault(), "%.1f kg", weightInKg));
 
-        // Lógica para carregar a imagem 3D (igual à do adapter)
-        String imageUrl = detail.getSprites().getOther().getHome().getFrontDefault();
-        Glide.with(this)
-                .load(imageUrl)
-                .placeholder(R.drawable.pokeball_placeholder)
-                .into(pokemonSprite);
+        String imageUrl = null;
+        if (detail.getSprites() != null && detail.getSprites().getOther() != null && detail.getSprites().getOther().getHome() != null && detail.getSprites().getOther().getHome().getFrontDefault() != null) {
+            imageUrl = detail.getSprites().getOther().getHome().getFrontDefault();
+        }
+        Glide.with(this).load(imageUrl).placeholder(R.drawable.pokeball_placeholder).into(pokemonSprite);
 
-        // Lógica para criar os tipos (reaproveitada do adapter)
         typesContainer.removeAllViews();
         if (detail.getTypes() != null && !detail.getTypes().isEmpty()) {
             for (PokemonDetail.Types typeWrapper : detail.getTypes()) {
@@ -112,9 +102,42 @@ public class DetailActivity extends AppCompatActivity {
                 typesContainer.addView(typeTextView);
             }
         }
+        populateIndividualStats(detail);
     }
 
-    // Eu extraí a criação do TextView de tipo para um método reutilizável.
+    // Eu gero dinamicamente a seção de status. Para cada status recebido da API, eu
+    // inflo um layout de item (stat_item_layout), preencho seus componentes e o
+    // adiciono ao container. A ordem dos rótulos (HP, Ataque, etc.) pressupõe
+    // a mesma ordem de retorno da API.
+    private void populateIndividualStats(PokemonDetail detail) {
+        individualStatsContainer.removeAllViews();
+        LayoutInflater inflater = LayoutInflater.from(this);
+
+        if (detail.getStats() != null) {
+            List<String> statLabels = Arrays.asList("HP", "Ataque", "Defesa", "Atq. Esp.", "Def. Esp.", "Velocidade");
+
+            for (int i = 0; i < detail.getStats().size(); i++) {
+                if (i >= statLabels.size()) break; // Proteção contra listas de tamanhos diferentes
+
+                View statRowView = inflater.inflate(R.layout.stat_item_layout, individualStatsContainer, false);
+
+                TextView statName = statRowView.findViewById(R.id.tv_stat_name);
+                ProgressBar statProgressBar = statRowView.findViewById(R.id.pb_stat);
+                TextView statValue = statRowView.findViewById(R.id.tv_stat_value);
+
+                PokemonDetail.Stats pokemonStat = detail.getStats().get(i);
+                int baseStat = pokemonStat.getBaseStat();
+
+                statName.setText(statLabels.get(i));
+                statValue.setText(String.valueOf(baseStat));
+                statProgressBar.setMax(200);
+                statProgressBar.setProgress(baseStat);
+
+                individualStatsContainer.addView(statRowView);
+            }
+        }
+    }
+
     private TextView createTypeTextView(String typeName) {
         TextView typeTextView = new TextView(this);
         typeTextView.setText(typeName.substring(0, 1).toUpperCase() + typeName.substring(1));
@@ -140,14 +163,31 @@ public class DetailActivity extends AppCompatActivity {
         return typeTextView;
     }
 
+    // Criei este método utilitário para converter unidades de densidade de pixel (DP)
+    // em pixels brutos. Isso é essencial para garantir que as dimensões definidas
+    // programaticamente se adaptem corretamente a diferentes densidades de tela.
     private int dpToPx(int dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
     }
 
-    // Eu preciso preencher o mapa de cores aqui também para a DetailActivity saber como colorir os tipos.
     private void populateTypeBackgrounds() {
         typeBackgrounds.put("grass", R.drawable.type_background_grass);
         typeBackgrounds.put("poison", R.drawable.type_background_poison);
-        // ... adicione todos os outros tipos aqui, igual ao seu adapter ...
+        typeBackgrounds.put("fire", R.drawable.type_background_fire);
+        typeBackgrounds.put("flying", R.drawable.type_background_flying);
+        typeBackgrounds.put("water", R.drawable.type_background_water);
+        typeBackgrounds.put("bug", R.drawable.type_background_bug);
+        typeBackgrounds.put("normal", R.drawable.type_background_normal);
+        typeBackgrounds.put("electric", R.drawable.type_background_electric);
+        typeBackgrounds.put("ground", R.drawable.type_background_ground);
+        typeBackgrounds.put("fairy", R.drawable.type_background_fairy);
+        typeBackgrounds.put("fighting", R.drawable.type_background_fighting);
+        typeBackgrounds.put("psychic", R.drawable.type_background_psychic);
+        typeBackgrounds.put("rock", R.drawable.type_background_rock);
+        typeBackgrounds.put("steel", R.drawable.type_background_steel);
+        typeBackgrounds.put("ice", R.drawable.type_background_ice);
+        typeBackgrounds.put("ghost", R.drawable.type_background_ghost);
+        typeBackgrounds.put("dragon", R.drawable.type_background_dragon);
+        typeBackgrounds.put("dark", R.drawable.type_background_dark);
     }
 }

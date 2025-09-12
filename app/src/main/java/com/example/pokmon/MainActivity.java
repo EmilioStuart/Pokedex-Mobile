@@ -1,20 +1,13 @@
 package com.example.pokmon;
 
+import android.os.Bundle;
+import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import android.os.Bundle;
-import android.widget.SearchView; // Importação necessária
-import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale; // Importação para o toLowerCase
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
+import java.util.*;
+import retrofit2.*;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
@@ -30,6 +23,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Eu forço o modo claro diretamente nesta Activity para garantir a consistência
+        // visual, independentemente da configuração do sistema ou da classe Application.
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+
         recyclerView = findViewById(R.id.recycler_view_pokedex);
         searchView = findViewById(R.id.search_view);
 
@@ -41,6 +38,9 @@ public class MainActivity extends AppCompatActivity {
         fetchPokemonData();
     }
 
+    // Eu configuro os listeners da SearchView aqui. O 'onQueryTextChange' me permite
+    // filtrar a lista dinamicamente enquanto o usuário digita, oferecendo uma
+    // experiência de busca em tempo real.
     private void setupSearchView() {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -57,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // Eu implemento a lógica de filtragem da lista de Pokémon. Se a busca estiver
+    // vazia, eu restauro a lista original. Caso contrário, eu crio uma nova lista
+    // contendo apenas os Pokémon cujo nome corresponde à query.
     private void filterPokemonList(String query) {
         if (query.isEmpty()) {
             pokemonAdapter.setPokemonList(originalPokemonList);
@@ -71,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     private void fetchPokemonData() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://pokeapi.co/api/v2/")
@@ -84,6 +86,9 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<PokemonResponse>() {
             @Override
             public void onResponse(Call<PokemonResponse> call, Response<PokemonResponse> response) {
+                // No recebimento de uma resposta bem-sucedida, eu primeiro limpo a lista de
+                // backup para evitar duplicatas. Em seguida, eu a preencho com os novos dados
+                // da API e, finalmente, atualizo o adapter para que a lista completa seja exibida.
                 if (response.isSuccessful() && response.body() != null) {
                     originalPokemonList.clear();
                     originalPokemonList.addAll(response.body().getResults());

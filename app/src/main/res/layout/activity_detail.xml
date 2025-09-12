@@ -96,6 +96,27 @@
             android:orientation="vertical"
             app:layout_constraintGuide_percent="0.5" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/tv_stats_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Atributos Base"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginTop="32dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_detail_weight" />
 
+        <LinearLayout
+            android:id="@+id/ll_individual_stats_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp"
+            android:paddingBottom="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_stats_title" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

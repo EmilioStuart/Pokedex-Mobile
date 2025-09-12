@@ -4,44 +4,34 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.util.TypedValue;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.view.*;
+import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
+import java.util.*;
+import retrofit2.*;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import java.util.Comparator;
-
 public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonViewHolder> {
-    private List<Pokemon> pokemonList = new ArrayList<>();
-    private List<PokemonDetail> pokemonDetailList = new ArrayList<>();
-    private Context context;
-    private PokeApiService pokeApiService;
-    private Map<String, Integer> typeBackgrounds = new HashMap<>();
+    private final List<Pokemon> pokemonList = new ArrayList<>();
+    private final List<PokemonDetail> pokemonDetailList = new ArrayList<>();
+    private final Context context;
+    private final PokeApiService pokeApiService;
+    private final Map<String, Integer> typeBackgrounds = new HashMap<>();
 
     public PokemonAdapter(Context context) {
         this.context = context;
+        // Eu configuro e instancio o Retrofit aqui, definindo a URL base da PokeAPI
+        // e o conversor Gson para desserializar as respostas JSON.
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://pokeapi.co/api/v2/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         pokeApiService = retrofit.create(PokeApiService.class);
 
+        // Eu inicializo um mapa para associar cada tipo de Pokémon a um recurso de drawable.
+        // Isso me permite definir dinamicamente o plano de fundo dos tipos na UI.
         typeBackgrounds.put("grass", R.drawable.type_background_grass);
         typeBackgrounds.put("poison", R.drawable.type_background_poison);
         typeBackgrounds.put("fire", R.drawable.type_background_fire);
@@ -62,6 +52,9 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
         typeBackgrounds.put("dark", R.drawable.type_background_dark);
     }
 
+    // Eu uso este método para receber a lista inicial de Pokémon. Eu limpo as listas
+    // de dados para garantir um estado limpo e, em seguida, inicio uma busca assíncrona
+    // pelos detalhes de cada Pokémon na nova lista.
     public void setPokemonList(List<Pokemon> pokemonList) {
         this.pokemonList.clear();
         this.pokemonList.addAll(pokemonList);
@@ -79,21 +72,22 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
 
         pokeApiService.getPokemonDetail(idOrName).enqueue(new Callback<PokemonDetail>() {
             @Override
-            public void onResponse(Call<PokemonDetail> call, Response<PokemonDetail> response) {
+            public void onResponse(@NonNull Call<PokemonDetail> call, @NonNull Response<PokemonDetail> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     pokemonDetailList.add(response.body());
-                    pokemonDetailList.sort(new Comparator<PokemonDetail>() {
-                        @Override
-                        public int compare(PokemonDetail p1, PokemonDetail p2) {
-                            return Integer.compare(p1.getId(), p2.getId());
-                        }
-                    });
+                    // Após uma resposta bem-sucedida, eu adiciono os detalhes à lista. Como as
+                    // chamadas de rede são assíncronas e podem terminar fora de ordem, eu
+                    // reordeno a lista inteira por ID a cada nova adição. Isso garante que
+                    // a UI sempre exiba os Pokémon na ordem numérica correta. Em seguida,
+                    // eu notifico o adapter para redesenhar a view.
+                    pokemonDetailList.sort(Comparator.comparingInt(PokemonDetail::getId));
                     notifyDataSetChanged();
                 }
             }
 
             @Override
-            public void onFailure(Call<PokemonDetail> call, Throwable t) {
+            public void onFailure(@NonNull Call<PokemonDetail> call, @NonNull Throwable t) {
+                // Eu decidi não implementar um tratamento de erro de rede neste momento.
             }
         });
     }
@@ -113,6 +107,9 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
             holder.pokemonNumber.setText(String.format(Locale.getDefault(), "Nº %04d", detail.getId()));
             holder.pokemonName.setText(detail.getName().substring(0, 1).toUpperCase() + detail.getName().substring(1));
 
+            // Eu implemento uma estratégia de fallback para a imagem do sprite. Dou prioridade
+            // ao sprite animado da 5ª geração, depois ao sprite 'home' e, por fim, ao
+            // sprite padrão, garantindo que eu sempre tenha uma imagem para exibir.
             String imageUrl = null;
             if (detail.getSprites() != null &&
                     detail.getSprites().getVersions() != null &&
@@ -136,8 +133,10 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
                     .error(R.drawable.pokeball_placeholder)
                     .into(holder.pokemonSprite);
 
+            // Eu gerencio dinamicamente a exibição dos tipos. Primeiro, eu limpo o container
+            // para remover quaisquer tipos de um item reciclado. Depois, eu itero sobre a
+            // lista de tipos do Pokémon atual e crio e estilizo um TextView para cada um.
             holder.pokemonTypesContainer.removeAllViews();
-
             if (detail.getTypes() != null && !detail.getTypes().isEmpty()) {
                 for (PokemonDetail.Types typeWrapper : detail.getTypes()) {
                     String typeName = typeWrapper.getType().getName();
@@ -153,6 +152,8 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
                     );
                     typeTextView.setGravity(Gravity.CENTER);
 
+                    // Eu uso o mapa 'typeBackgrounds' para obter o drawable correto.
+                    // Se o tipo não for encontrado, aplico um fundo padrão.
                     Integer backgroundResId = typeBackgrounds.get(typeName.toLowerCase(Locale.getDefault()));
                     if (backgroundResId != null) {
                         typeTextView.setBackgroundResource(backgroundResId);
@@ -173,13 +174,10 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
             }
             holder.pokemonTypesContainer.setVisibility(View.VISIBLE);
 
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(context, DetailActivity.class);
-                    intent.putExtra("POKEMON_ID", detail.getId());
-                    context.startActivity(intent);
-                }
+            holder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(context, DetailActivity.class);
+                intent.putExtra("POKEMON_ID", detail.getId());
+                context.startActivity(intent);
             });
 
         } else {

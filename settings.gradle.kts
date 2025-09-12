@@ -16,9 +16,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // Eu adiciono o JitPack como uma fonte de dependências confiável para o projeto.
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
 rootProject.name = "Pokémon"
 include(":app")
- 
