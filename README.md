@@ -6,7 +6,7 @@ Uma aplicação Android nativa, desenvolvida em Java, que implementa uma Pokedex
 
 | Lista Principal e Busca | Tela de Detalhes do Pokémon |
 | :---: | :---: |
-| ![Imagem da tela principal](https://github.com/user-attachments/assets/466383c7-a7ba-42ed-8c08-814ad437eed1) | ![Imagem da tela de detalhes do pokémon](https://github.com/user-attachments/assets/82166e78-8db0-4336-a66f-c47ca88450ab) |
+| ![Imagem da tela principal](https://github.com/user-attachments/assets/b2c65d35-f1ae-471b-b259-4e09e6b76261) | ![Imagem da tela de detalhes do pokémon](https://github.com/user-attachments/assets/82166e78-8db0-4336-a66f-c47ca88450ab) |
 
 ## Funcionalidades Implementadas
 
