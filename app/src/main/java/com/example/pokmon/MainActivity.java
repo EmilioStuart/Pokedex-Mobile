@@ -2,10 +2,12 @@ package com.example.pokmon;
 
 import android.os.Bundle;
 import android.widget.*;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.*;
 import retrofit2.*;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -15,6 +17,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private PokemonAdapter pokemonAdapter;
     private SearchView searchView;
+    private FloatingActionButton fabSort;
 
     private List<Pokemon> originalPokemonList = new ArrayList<>();
 
@@ -23,24 +26,49 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Eu forço o modo claro diretamente nesta Activity para garantir a consistência
-        // visual, independentemente da configuração do sistema ou da classe Application.
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
         recyclerView = findViewById(R.id.recycler_view_pokedex);
         searchView = findViewById(R.id.search_view);
+        fabSort = findViewById(R.id.fab_sort);
 
         pokemonAdapter = new PokemonAdapter(this);
         recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
         recyclerView.setAdapter(pokemonAdapter);
 
         setupSearchView();
+        setupSortFab();
         fetchPokemonData();
     }
 
-    // Eu configuro os listeners da SearchView aqui. O 'onQueryTextChange' me permite
-    // filtrar a lista dinamicamente enquanto o usuário digita, oferecendo uma
-    // experiência de busca em tempo real.
+    private void setupSortFab() {
+        fabSort.setOnClickListener(view -> {
+            final String[] options = {"Número (Crescente)", "Número (Decrescente)", "Nome (A-Z)", "Nome (Z-A)"};
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Ordenar por");
+            builder.setItems(options, (dialog, which) -> {
+                // Eu chamo o método de ordenação no adapter com base na opção escolhida,
+                // usando o Enum correspondente para manter o código limpo e seguro.
+                switch (which) {
+                    case 0:
+                        pokemonAdapter.sortList(PokemonAdapter.SortType.ID_ASC);
+                        break;
+                    case 1:
+                        pokemonAdapter.sortList(PokemonAdapter.SortType.ID_DESC);
+                        break;
+                    case 2:
+                        pokemonAdapter.sortList(PokemonAdapter.SortType.NAME_ASC);
+                        break;
+                    case 3:
+                        pokemonAdapter.sortList(PokemonAdapter.SortType.NAME_DESC);
+                        break;
+                }
+            });
+            builder.show();
+        });
+    }
+
     private void setupSearchView() {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -57,9 +85,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // Eu implemento a lógica de filtragem da lista de Pokémon. Se a busca estiver
-    // vazia, eu restauro a lista original. Caso contrário, eu crio uma nova lista
-    // contendo apenas os Pokémon cujo nome corresponde à query.
     private void filterPokemonList(String query) {
         if (query.isEmpty()) {
             pokemonAdapter.setPokemonList(originalPokemonList);
@@ -86,13 +111,9 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<PokemonResponse>() {
             @Override
             public void onResponse(Call<PokemonResponse> call, Response<PokemonResponse> response) {
-                // No recebimento de uma resposta bem-sucedida, eu primeiro limpo a lista de
-                // backup para evitar duplicatas. Em seguida, eu a preencho com os novos dados
-                // da API e, finalmente, atualizo o adapter para que a lista completa seja exibida.
                 if (response.isSuccessful() && response.body() != null) {
                     originalPokemonList.clear();
                     originalPokemonList.addAll(response.body().getResults());
-
                     pokemonAdapter.setPokemonList(originalPokemonList);
                 }
             }
