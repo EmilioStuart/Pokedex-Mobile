@@ -1,4 +1,4 @@
-package com.example.pokmon; // Garanta que seu pacote está correto
+package com.example.pokmon;
 
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
