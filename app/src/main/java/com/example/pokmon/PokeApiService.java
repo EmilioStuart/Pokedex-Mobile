@@ -10,7 +10,7 @@ public interface PokeApiService {
     @GET("pokemon")
     Call<PokemonResponse> getPokemonList(@Query("limit") int limit);
 
-    // Busca os detalhes principais de um Pokémon (sprites, stats, etc.)
+    // Busca os detalhes principais de um Pokémon (sprites, stats...)
     @GET("pokemon/{idOrName}")
     Call<PokemonDetail> getPokemonDetail(@Path("idOrName") String idOrName);
 

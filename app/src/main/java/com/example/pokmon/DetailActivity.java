@@ -1,15 +1,24 @@
 package com.example.pokmon;
 
-import android.content.Context;
-import android.graphics.Color;
+import android.content.res.Resources;
 import android.os.Bundle;
-import android.util.TypedValue;
-import android.view.*;
-import android.widget.*;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
-import java.util.*;
-import retrofit2.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class DetailActivity extends AppCompatActivity {
@@ -19,7 +28,7 @@ public class DetailActivity extends AppCompatActivity {
     private LinearLayout typesContainer;
     private LinearLayout individualStatsContainer;
     private PokeApiService pokeApiService;
-    private final Map<String, Integer> typeBackgrounds = new HashMap<>();
+    private TranslationApiService translationApiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,12 +36,10 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
 
         initializeViews();
-        setupRetrofit();
-        populateTypeBackgrounds();
+        setupRetrofitServices();
 
         int pokemonId = getIntent().getIntExtra("POKEMON_ID", -1);
         if (pokemonId != -1) {
-            // Eu disparo as duas chamadas de API em paralelo para otimizar o tempo de carregamento.
             fetchPokemonDetails(pokemonId);
             fetchPokemonSpecies(pokemonId);
         } else {
@@ -52,18 +59,26 @@ public class DetailActivity extends AppCompatActivity {
         individualStatsContainer = findViewById(R.id.ll_individual_stats_container);
     }
 
-    private void setupRetrofit() {
-        Retrofit retrofit = new Retrofit.Builder()
+    private void setupRetrofitServices() {
+        // Eu crio uma instância do Retrofit para a PokeAPI.
+        Retrofit pokeApiRetrofit = new Retrofit.Builder()
                 .baseUrl("https://pokeapi.co/api/v2/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        pokeApiService = retrofit.create(PokeApiService.class);
+        pokeApiService = pokeApiRetrofit.create(PokeApiService.class);
+
+        // Eu crio uma segunda instância do Retrofit para a Translation API.
+        Retrofit translationRetrofit = new Retrofit.Builder()
+                .baseUrl("https://api.mymemory.translated.net/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        translationApiService = translationRetrofit.create(TranslationApiService.class);
     }
 
     private void fetchPokemonDetails(int pokemonId) {
         pokeApiService.getPokemonDetail(String.valueOf(pokemonId)).enqueue(new Callback<PokemonDetail>() {
             @Override
-            public void onResponse(Call<PokemonDetail> call, Response<PokemonDetail> response) {
+            public void onResponse(@NonNull Call<PokemonDetail> call, @NonNull Response<PokemonDetail> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     populateUI(response.body());
                 } else {
@@ -72,33 +87,50 @@ public class DetailActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<PokemonDetail> call, Throwable t) {
+            public void onFailure(@NonNull Call<PokemonDetail> call, @NonNull Throwable t) {
                 Toast.makeText(DetailActivity.this, "Erro de rede: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    // Eu crio este novo método para buscar os dados da "espécie", que contém a descrição.
     private void fetchPokemonSpecies(int pokemonId) {
         pokeApiService.getPokemonSpecies(pokemonId).enqueue(new Callback<PokemonSpecies>() {
             @Override
-            public void onResponse(Call<PokemonSpecies> call, Response<PokemonSpecies> response) {
+            public void onResponse(@NonNull Call<PokemonSpecies> call, @NonNull Response<PokemonSpecies> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    // A API retorna múltiplas descrições; eu preciso filtrar para encontrar a primeira em inglês.
-                    for (PokemonSpecies.FlavorTextEntry entry : response.body().getFlavorTextEntries()) {
-                        if (entry.getLanguage().getName().equals("en")) {
-                            // Eu limpo o texto de caracteres especiais como quebras de linha.
-                            String cleanedText = entry.getFlavorText().replace('\n', ' ').replace('\f', ' ');
-                            pokemonDescription.setText(cleanedText);
-                            return; // Eu encerro o loop assim que encontrar a primeira correspondência.
-                        }
-                    }
+                    response.body().getFlavorTextEntries().stream()
+                            .filter(entry -> entry.getLanguage().getName().equals("en"))
+                            .findFirst()
+                            .ifPresent(entry -> {
+                                String cleanedText = entry.getFlavorText().replace('\n', ' ').replace('\f', ' ');
+                                pokemonDescription.setText("Traduzindo para o Português...");
+                                translateDescription(cleanedText);
+                            });
                 }
             }
 
             @Override
-            public void onFailure(Call<PokemonSpecies> call, Throwable t) {
-                // Eu opto por uma falha silenciosa aqui, pois a descrição não é um dado crítico para a tela.
+            public void onFailure(@NonNull Call<PokemonSpecies> call, @NonNull Throwable t) {
+            }
+        });
+    }
+
+    private void translateDescription(String textInEnglish) {
+        translationApiService.translate(textInEnglish, "en|pt-br").enqueue(new Callback<TranslationResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<TranslationResponse> call, @NonNull Response<TranslationResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    String translatedText = response.body().getResponseData().getTranslatedText();
+                    pokemonDescription.setText(translatedText);
+                } else {
+                    // Se a tradução falhar, eu exibo o texto em inglês
+                    pokemonDescription.setText(textInEnglish);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<TranslationResponse> call, @NonNull Throwable t) {
+                pokemonDescription.setText(textInEnglish);
             }
         });
     }
@@ -122,8 +154,8 @@ public class DetailActivity extends AppCompatActivity {
         if (detail.getTypes() != null && !detail.getTypes().isEmpty()) {
             for (PokemonDetail.Types typeWrapper : detail.getTypes()) {
                 String typeName = typeWrapper.getType().getName();
-                TextView typeTextView = createTypeTextView(typeName);
-                typesContainer.addView(typeTextView);
+                ImageView typeImageView = createTypeImageView(typeName);
+                typesContainer.addView(typeImageView);
             }
         }
         populateIndividualStats(detail);
@@ -158,53 +190,23 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
-    private TextView createTypeTextView(String typeName) {
-        TextView typeTextView = new TextView(this);
-        typeTextView.setText(typeName.substring(0, 1).toUpperCase() + typeName.substring(1));
-        typeTextView.setTextColor(Color.WHITE);
-        typeTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        typeTextView.setPadding(dpToPx(8), dpToPx(4), dpToPx(8), dpToPx(4));
-        typeTextView.setGravity(Gravity.CENTER);
+    private ImageView createTypeImageView(String typeName) {
+        ImageView imageView = new ImageView(this);
+        String resourceName = typeName.toLowerCase(Locale.ROOT) + "_type";
+        int resourceId = getResources().getIdentifier(resourceName, "drawable", getPackageName());
 
-        Integer backgroundResId = typeBackgrounds.get(typeName.toLowerCase(Locale.getDefault()));
-        if (backgroundResId != null) {
-            typeTextView.setBackgroundResource(backgroundResId);
-        } else {
-            typeTextView.setBackgroundResource(R.drawable.type_background_default);
+        if (resourceId != 0) {
+            imageView.setImageResource(resourceId);
         }
 
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dpToPx(70), dpToPx(30));
         params.setMarginEnd(dpToPx(8));
-        typeTextView.setLayoutParams(params);
+        imageView.setLayoutParams(params);
 
-        return typeTextView;
+        return imageView;
     }
 
     private int dpToPx(int dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
-    }
-
-    private void populateTypeBackgrounds() {
-        typeBackgrounds.put("grass", R.drawable.type_background_grass);
-        typeBackgrounds.put("poison", R.drawable.type_background_poison);
-        typeBackgrounds.put("fire", R.drawable.type_background_fire);
-        typeBackgrounds.put("flying", R.drawable.type_background_flying);
-        typeBackgrounds.put("water", R.drawable.type_background_water);
-        typeBackgrounds.put("bug", R.drawable.type_background_bug);
-        typeBackgrounds.put("normal", R.drawable.type_background_normal);
-        typeBackgrounds.put("electric", R.drawable.type_background_electric);
-        typeBackgrounds.put("ground", R.drawable.type_background_ground);
-        typeBackgrounds.put("fairy", R.drawable.type_background_fairy);
-        typeBackgrounds.put("fighting", R.drawable.type_background_fighting);
-        typeBackgrounds.put("psychic", R.drawable.type_background_psychic);
-        typeBackgrounds.put("rock", R.drawable.type_background_rock);
-        typeBackgrounds.put("steel", R.drawable.type_background_steel);
-        typeBackgrounds.put("ice", R.drawable.type_background_ice);
-        typeBackgrounds.put("ghost", R.drawable.type_background_ghost);
-        typeBackgrounds.put("dragon", R.drawable.type_background_dragon);
-        typeBackgrounds.put("dark", R.drawable.type_background_dark);
+        return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
     }
 }

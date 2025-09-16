@@ -47,22 +47,15 @@ public class MainActivity extends AppCompatActivity {
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Ordenar por");
-            builder.setItems(options, (dialog, which) -> {
-                // Eu chamo o método de ordenação no adapter com base na opção escolhida,
-                // usando o Enum correspondente para manter o código limpo e seguro.
-                switch (which) {
-                    case 0:
-                        pokemonAdapter.sortList(PokemonAdapter.SortType.ID_ASC);
-                        break;
-                    case 1:
-                        pokemonAdapter.sortList(PokemonAdapter.SortType.ID_DESC);
-                        break;
-                    case 2:
-                        pokemonAdapter.sortList(PokemonAdapter.SortType.NAME_ASC);
-                        break;
-                    case 3:
-                        pokemonAdapter.sortList(PokemonAdapter.SortType.NAME_DESC);
-                        break;
+            builder.setItems(options, (dialog, escolha) -> {
+                if (escolha == 0) {
+                    pokemonAdapter.sortList(PokemonAdapter.SortType.ID_ASC);
+                } else if (escolha == 1) {
+                    pokemonAdapter.sortList(PokemonAdapter.SortType.ID_DESC);
+                } else if (escolha == 2) {
+                    pokemonAdapter.sortList(PokemonAdapter.SortType.NAME_ASC);
+                } else if (escolha == 3) {
+                    pokemonAdapter.sortList(PokemonAdapter.SortType.NAME_DESC);
                 }
             });
             builder.show();

@@ -62,7 +62,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/ll_detail_types_container"
-            tools:text="A strange seed was planted on its back at birth. The plant sprouts and grows with this Pokémon." />
+            tools:text="Traduzindo para o Português..." />
 
         <TextView
             android:id="@+id/tv_height_label"
