@@ -1,5 +1,6 @@
 package com.example.pokmon;
 
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.widget.SearchView;
 import android.widget.Toast;
@@ -27,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private SearchView searchView;
     private FloatingActionButton fabSort;
     private PokeApiService pokeApiService;
+    private MediaPlayer mediaPlayer;
 
     private final List<PokemonDetail> initialPokemonDetails = new ArrayList<>();
     private int detailsFetchedCounter = 0;
@@ -35,6 +37,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mediaPlayer = MediaPlayer.create(this, R.raw.opening_pokemon_emerald);
+        mediaPlayer.setLooping(true);
+        mediaPlayer.start();
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
@@ -50,6 +56,16 @@ public class MainActivity extends AppCompatActivity {
         setupSearchView();
         setupSortFab();
         fetchInitialPokemonData();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
     }
 
     private void setupRetrofit() {
