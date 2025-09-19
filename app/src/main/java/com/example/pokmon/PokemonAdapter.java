@@ -28,7 +28,6 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
         ID_ASC, ID_DESC, NAME_ASC, NAME_DESC
     }
 
-    private final List<Pokemon> pokemonList = new ArrayList<>();
     private final List<PokemonDetail> pokemonDetailList = new ArrayList<>();
     private final Context context;
     private final PokeApiService pokeApiService;
@@ -54,29 +53,10 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
         notifyDataSetChanged();
     }
 
-    public void setPokemonList(List<Pokemon> pokemonList) {
-        this.pokemonList.clear();
-        this.pokemonList.addAll(pokemonList);
-        this.pokemonDetailList.clear();
+    public void submitList(List<PokemonDetail> newPokemonDetails) {
+        pokemonDetailList.clear();
+        pokemonDetailList.addAll(newPokemonDetails);
         notifyDataSetChanged();
-        for (Pokemon pokemon : pokemonList) {
-            fetchPokemonDetails(pokemon);
-        }
-    }
-
-    private void fetchPokemonDetails(Pokemon pokemon) {
-        String idOrName = pokemon.getUrl().split("/")[6];
-        pokeApiService.getPokemonDetail(idOrName).enqueue(new Callback<PokemonDetail>() {
-            @Override
-            public void onResponse(@NonNull Call<PokemonDetail> call, @NonNull Response<PokemonDetail> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    pokemonDetailList.add(response.body());
-                    sortList(SortType.ID_ASC);
-                }
-            }
-            @Override
-            public void onFailure(@NonNull Call<PokemonDetail> call, @NonNull Throwable t) {}
-        });
     }
 
     @NonNull
@@ -131,6 +111,7 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
     private ImageView createTypeImageView(String typeName) {
         ImageView imageView = new ImageView(context);
         String resourceName = typeName.toLowerCase(Locale.ROOT) + "_type";
+
         int resourceId = context.getResources().getIdentifier(resourceName, "drawable", context.getPackageName());
         if (resourceId != 0) {
             imageView.setImageResource(resourceId);
