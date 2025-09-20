@@ -17,11 +17,11 @@
         android:forceDarkAllowed="false">
 
         <activity
-            android:name=".DetailActivity"
+            android:name=".ui.DetailActivity"
             android:exported="false"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".LoadingScreen"
+            android:name=".ui.LoadingScreen"
             android:exported="true"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
@@ -30,7 +30,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true"
             tools:ignore="LockedOrientationActivity" />
     </application>

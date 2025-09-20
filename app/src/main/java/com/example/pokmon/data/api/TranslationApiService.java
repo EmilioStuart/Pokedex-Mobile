@@ -1,4 +1,6 @@
-package com.example.pokmon;
+package com.example.pokmon.data.api;
+
+import com.example.pokmon.data.models.TranslationResponse;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

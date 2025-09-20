@@ -1,4 +1,4 @@
-package com.example.pokmon;
+package com.example.pokmon.adapter;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,13 +12,15 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.example.pokmon.ui.DetailActivity;
+import com.example.pokmon.data.models.PokemonDetail;
+import com.example.pokmon.R;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -30,7 +32,7 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
 
     private final List<PokemonDetail> pokemonDetailList = new ArrayList<>();
     private final Context context;
-    private final PokeApiService pokeApiService;
+    private final com.example.pokmon.data.api.PokeApiService pokeApiService;
 
     public PokemonAdapter(Context context) {
         this.context = context;
@@ -38,7 +40,7 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
                 .baseUrl("https://pokeapi.co/api/v2/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        pokeApiService = retrofit.create(PokeApiService.class);
+        pokeApiService = retrofit.create(com.example.pokmon.data.api.PokeApiService.class);
     }
 
     public void sortList(SortType sortType) {

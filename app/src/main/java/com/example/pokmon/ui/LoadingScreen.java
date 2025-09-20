@@ -1,4 +1,4 @@
-package com.example.pokmon;
+package com.example.pokmon.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,6 +12,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.bumptech.glide.Glide;
+import com.example.pokmon.R;
 
 public class LoadingScreen extends AppCompatActivity {
 

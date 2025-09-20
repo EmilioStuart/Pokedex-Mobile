@@ -1,9 +1,10 @@
-package com.example.pokmon;
+package com.example.pokmon.data.models;
 
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class PokemonDetail {
+
     private int id;
     private String name;
     private List<Types> types;
@@ -19,6 +20,8 @@ public class PokemonDetail {
     public int getHeight() { return height; }
     public int getWeight() { return weight; }
     public List<Stats> getStats() { return stats; }
+
+    // --- Classes Aninhadas ---
 
     public static class Types {
         private Type type;
@@ -42,10 +45,27 @@ public class PokemonDetail {
 
         public static class Other {
             private Home home;
+            private OfficialArtwork officialArtwork;
+
             public Home getHome() { return home; }
+            public OfficialArtwork getOfficialArtwork() { return officialArtwork; }
         }
 
         public static class Home {
+            @SerializedName("front_default")
+            private String frontDefault;
+
+            // Eu adiciono este campo para capturar a URL do sprite shiny.
+            @SerializedName("front_shiny")
+            private String frontShiny;
+
+            public String getFrontDefault() { return frontDefault; }
+
+            // E este é o método getter que estava faltando.
+            public String getFrontShiny() { return frontShiny; }
+        }
+
+        public static class OfficialArtwork {
             @SerializedName("front_default")
             private String frontDefault;
             public String getFrontDefault() { return frontDefault; }
@@ -79,7 +99,6 @@ public class PokemonDetail {
         @SerializedName("base_stat")
         private int baseStat;
         private Stat stat;
-
         public int getBaseStat() { return baseStat; }
         public Stat getStat() { return stat; }
     }

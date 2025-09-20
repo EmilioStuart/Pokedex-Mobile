@@ -1,7 +1,9 @@
-package com.example.pokmon;
+package com.example.pokmon.ui;
 
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.SearchView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -10,8 +12,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.example.pokmon.R;
+import com.example.pokmon.adapter.PokemonAdapter;
+import com.example.pokmon.data.api.PokeApiService;
+import com.example.pokmon.data.models.Pokemon;
+import com.example.pokmon.data.models.PokemonDetail;
+import com.example.pokmon.data.models.PokemonResponse;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -27,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private PokemonAdapter pokemonAdapter;
     private SearchView searchView;
     private FloatingActionButton fabSort;
+    private ProgressBar progressBar;
     private PokeApiService pokeApiService;
     private MediaPlayer mediaPlayer;
 
@@ -47,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recycler_view_pokedex);
         searchView = findViewById(R.id.search_view);
         fabSort = findViewById(R.id.fab_sort);
+        progressBar = findViewById(R.id.progress_bar);
 
         setupRetrofit();
         pokemonAdapter = new PokemonAdapter(this);
@@ -77,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchInitialPokemonData() {
+        // Eu torno a ProgressBar visível ANTES de iniciar a chamada de rede.
+        progressBar.setVisibility(View.VISIBLE);
         pokeApiService.getPokemonList(151).enqueue(new Callback<PokemonResponse>() {
             @Override
             public void onResponse(@NonNull Call<PokemonResponse> call, @NonNull Response<PokemonResponse> response) {
@@ -85,16 +98,20 @@ public class MainActivity extends AppCompatActivity {
                     initialPokemonDetails.clear();
                     detailsFetchedCounter = 0;
                     if (pokemonNameList.isEmpty()) {
+                        progressBar.setVisibility(View.GONE);
                         return;
                     }
                     for (Pokemon pokemon : pokemonNameList) {
                         fetchDetailsForPokemon(pokemon, pokemonNameList.size());
                     }
+                } else {
+                    progressBar.setVisibility(View.GONE);
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<PokemonResponse> call, @NonNull Throwable t) {
+                progressBar.setVisibility(View.GONE);
                 Toast.makeText(MainActivity.this, "Falha ao buscar dados", Toast.LENGTH_SHORT).show();
             }
         });
@@ -124,7 +141,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // Este método é o ponto final do carregamento inicial. É aqui que eu escondo a ProgressBar.
     private void onAllInitialDetailsFetched() {
+        progressBar.setVisibility(View.GONE);
         initialPokemonDetails.sort(Comparator.comparingInt(PokemonDetail::getId));
         pokemonAdapter.submitList(new ArrayList<>(initialPokemonDetails));
     }
@@ -133,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
+                // Ao submeter, eu chamo a lógica de filtro local.
                 filterLocalList(query);
                 searchView.clearFocus();
                 return true;
@@ -140,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
+                // Se o usuário limpar o campo, eu restauro a lista inicial.
                 if (newText.isEmpty()) {
                     filterLocalList(newText);
                 }
@@ -154,6 +175,8 @@ public class MainActivity extends AppCompatActivity {
             filteredList.addAll(initialPokemonDetails);
         } else {
             for (PokemonDetail pokemon : initialPokemonDetails) {
+                // Eu troco 'contains' por 'startsWith' para buscar
+                // apenas os Pokémon cujo nome começa com o texto da query.
                 if (pokemon.getName().toLowerCase(Locale.ROOT).startsWith(query.toLowerCase(Locale.ROOT))) {
                     filteredList.add(pokemon);
                 }

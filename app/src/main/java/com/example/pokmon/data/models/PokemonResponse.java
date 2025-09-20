@@ -1,4 +1,4 @@
-package com.example.pokmon;
+package com.example.pokmon.data.models;
 
 import java.util.List;
 
