@@ -1,69 +1,97 @@
-# Pokedex Mobile
+# 📱 Pokedex Mobile (Versão Completa)
 
-Uma aplicação Android nativa, desenvolvida em Java, que implementa uma Pokedex funcional através do consumo de dados da [PokeAPI](https://pokeapi.co/). O objetivo principal deste projeto é demonstrar a implementação de conceitos fundamentais do desenvolvimento Android, como consumo de APIs REST, manipulação de dados JSON e construção de interfaces de usuário dinâmicas e responsivas.
+Uma Pokédex moderna e interativa desenvolvida em Java nativo para Android. Este projeto vai além de uma simples lista, integrando múltiplas chamadas de API em tempo real para enriquecer os dados, incluindo um serviço de tradução e uma interface dinâmica para explorar os detalhes, status e evoluções de cada Pokémon.
 
-## Visão Geral do Aplicativo
+## 🎥 Demonstração em Vídeo
 
-| Lista Principal e Busca | Pesquisa de Pokémon | Tela de Detalhes do Pokémon |
-| :---: | :---: | :---: |
-| ![Imagem da tela principal](https://github.com/user-attachments/assets/b2c65d35-f1ae-471b-b259-4e09e6b76261) | ![Imagem da tela de pesquisa de pokémon](https://github.com/user-attachments/assets/000ed93e-fa2e-4bba-88e3-b8fb95716902) | ![Imagem da tela de detalhes do pokémon](https://github.com/user-attachments/assets/f02eddd1-2981-4cd6-b99d-720abe992838) |
+Assista ao aplicativo em ação, demonstrando a navegação, busca, ordenação e a riqueza de detalhes de cada Pokémon.
 
-## Funcionalidades Implementadas
+*Vídeo em breve*
 
-  * **Tela de Carregamento (Splash Screen):** Exibe uma animação inicial durante o carregamento do aplicativo.
-  * **Listagem de Pokémon:** Apresenta os Pokémon em um layout de grid (`GridLayoutManager`) utilizando `RecyclerView` para otimização de performance.
-  * **Busca em Tempo Real:** Inclui uma `SearchView` que filtra a lista de Pokémon com base na entrada do usuário. A filtragem é realizada no lado do cliente.
-  * **Ordenação por ID:** A lista de Pokémon é consistentemente ordenada pelo seu número de ID, mesmo com o carregamento assíncrono dos detalhes.
-  * **Exibição de Sprites:** Carrega e exibe sprites de alta qualidade dos Pokémon, utilizando os assets fornecidos pela API.
-  * **Visualização de Tipos:** Cada tipo do Pokémon é exibido com um background colorido correspondente para fácil identificação.
-  * **Tela de Detalhes:** Permite a navegação para uma tela de detalhes dedicada ao clicar em um Pokémon, exibindo informações adicionais como altura e peso.
-  * **Controle de Versão:** O código-fonte é gerenciado com Git.
+## ✨ Principais Funcionalidades
 
-## Tecnologias Utilizadas
+O aplicativo foi construído com um rico conjunto de funcionalidades para criar uma experiência de usuário completa e agradável.
 
-  * **Linguagem:** Java
-  * **Framework:** Android SDK nativo
+#### Tela Principal (`MainActivity`)
+
+  * **🎵 Música de Fundo:** Abertura clássica de Pokémon Emerald para uma imersão nostálgica.
+  * **🖼️ Lista em Grid Dinâmico:** Carregamento inicial rápido dos 151 primeiros Pokémon, exibidos em um `RecyclerView` com `GridLayoutManager`.
+  * **🔍 Busca Inteligente:**
+      * A busca por nome filtra a lista local de Pokémon.
+      * A busca por um Pokémon específico (que não está na lista inicial) aciona uma chamada direta à API.
+  * **⇅ Ordenação Dinâmica:** Um `FloatingActionButton` abre um menu para reordenar a lista por:
+      * Número (Crescente ou Decrescente)
+      * Nome (A-Z ou Z-A)
+  * **🔄 Indicador de Carregamento:** Um GIF animado é exibido durante as operações de rede para fornecer feedback visual ao usuário.
+  * **🎨 UI Consistente:** O app opera exclusivamente em Modo Claro e com a orientação travada no modo Retrato para garantir uma experiência de usuário estável e consistente.
+
+#### Tela de Detalhes (`DetailActivity`)
+
+  * **✨ Alternância de Sprite (Normal/Shiny):** Um `FloatingActionButton` permite ao usuário alternar instantaneamente entre a arte normal e a versão *shiny* do Pokémon.
+  * **📜 Descrição Traduzida:** A descrição da Pokédex é obtida em inglês e traduzida para o português em tempo real através da integração com a MyMemory Translation API.
+  * **📊 Gráfico de Atributos:** Os status base (HP, Ataque, Defesa, etc.) são exibidos com barras de progresso customizadas e com **cores condicionais** (vermelho, amarelo, verde) baseadas no valor do atributo.
+  * **🧬 Cadeia de Evolução Interativa:** Uma linha do tempo horizontal e rolável exibe toda a cadeia de evolução do Pokémon. Clicar em uma das evoluções **recarrega a tela de detalhes** com as informações do Pokémon selecionado.
+  * **🎨 Ícones de Tipo Customizados:** Os tipos do Pokémon são exibidos como imagens (`ImageViews`), carregadas dinamicamente com base no nome do tipo.
+
+## 🛠️ Arquitetura e Tecnologias Utilizadas
+
+A arquitetura do app foi projetada para ser desacoplada e escalável, separando as responsabilidades em pacotes lógicos (ui, adapter, data).
+
+  * **Linguagem:** **Java**
+  * **Framework:** **Android SDK Nativo**
   * **Bibliotecas Principais:**
-      * **Retrofit 2:** Cliente HTTP type-safe para Android e Java, utilizado para realizar as chamadas de rede à PokeAPI.
-      * **Gson:** Biblioteca para serialização e desserialização de objetos Java para JSON, utilizada para converter as respostas da API em modelos de dados (POJOs).
-      * **Glide:** Biblioteca para carregamento e cache de imagens, responsável por exibir os sprites dos Pokémon de forma assíncrona e eficiente.
-      * **AndroidX Libraries:** Incluindo `RecyclerView`, `CardView`, e `ConstraintLayout` para a construção da interface de usuário.
+      * **Retrofit 2:** Cliente HTTP utilizado para a comunicação com as APIs. Duas instâncias são criadas para gerenciar os diferentes `baseUrls` da PokeAPI e da API de Tradução.
+      * **Gson:** Utilizado para a serialização e desserialização de objetos Java para JSON.
+      * **Glide:** Gerencia o carregamento e cache de imagens e GIFs, essencial para a performance da UI.
+      * **AndroidX Libraries:** `RecyclerView`, `CardView`, `ConstraintLayout`, `AppCompat`.
+      * **Material Components:** Para componentes modernos como o `FloatingActionButton`.
 
-## Como Executar o Projeto
+## ⚙️ APIs Utilizadas
 
-Para clonar e executar esta aplicação em um ambiente de desenvolvimento local, os seguintes pré-requisitos são necessários:
+  * **[PokeAPI (v2)](https://pokeapi.co/):** Fonte principal para todos os dados de Pokémon, incluindo detalhes, espécies e cadeias de evolução.
+  * **[MyMemory Translation API](https://mymemory.translated.net/):** Serviço gratuito utilizado para a tradução em tempo real das descrições dos Pokémon.
 
-  * Android Studio (versão Narwhal 25.1.2 ou superior)
-  * Git
+## 🚀 Como Executar o Projeto
 
-Siga os passos abaixo:
+Para clonar e executar esta aplicação, siga os passos:
 
-1.  **Clone o repositório:**
+1.  **Pré-requisitos:**
+
+      * Android Studio (versão Hedgehog ou superior)
+      * Git
+
+2.  **Clonagem:**
+
     ```bash
     git clone https://github.com/EmilioStuart/Pokedex-Mobile.git
     ```
-2.  **Abra o projeto no Android Studio:**
-      * No menu do Android Studio, selecione `File > Open` e navegue até o diretório onde o projeto foi clonado.
-3.  **Sincronize as dependências do Gradle:**
-      * Aguarde o Android Studio concluir o processo de sincronização do Gradle, que irá baixar todas as bibliotecas necessárias.
-4.  **Execute a aplicação:**
-      * Selecione um dispositivo Android (físico ou emulador) e clique no botão "Run" (▶).
 
-## Estrutura do Código
+3.  **Assets Necessários:**
 
-  * **`MainActivity.java`**: Controla a tela principal, que exibe a lista de Pokémon e a funcionalidade de busca.
-  * **`DetailActivity.java`**: Controla a tela que exibe as informações detalhadas de um Pokémon específico.
-  * **`PokemonAdapter.java`**: Adaptador para o `RecyclerView`, responsável por vincular os dados dos Pokémon aos cards exibidos na lista.
-  * **`PokeApiService.java`**: Interface do Retrofit que define os endpoints da API a serem consumidos.
-  * **Modelos (POJOs)**: Classes como `Pokemon.java`, `PokemonDetail.java`, e `PokemonResponse.java` que modelam a estrutura dos dados recebidos da API.
+      * **Ícones dos Tipos:** Este projeto carrega os ícones dos tipos dinamicamente. Você precisa adicionar os arquivos `.png` para cada tipo na pasta `app/src/main/res/drawable`. O nome de cada arquivo deve seguir o padrão `nomedotipoemingles_type.png` (ex: `fire_type.png`, `water_type.png`).
+      * **Música de Fundo:** Adicione o arquivo de áudio `opening_pokemon_emerald.mp3` (ou `.wav`) na pasta `app/src/main/res/raw`.
 
-## Possíveis Melhorias Futuras
+4.  **Build e Execução:**
 
-  * **Paginação:** Implementar a biblioteca Paging 3 para carregar a lista de Pokémon sob demanda, melhorando a performance inicial e o uso de memória.
-  * **Cache Local:** Integrar a biblioteca Room Persistence para criar um banco de dados local, permitindo o funcionamento offline e uma inicialização mais rápida do aplicativo.
-  * **Injeção de Dependência:** Refatorar o projeto para utilizar um framework como Hilt ou Dagger para gerenciar as dependências de forma mais eficiente e melhorar a testabilidade.
-  * **Testes:** Desenvolver testes unitários (JUnit) e de instrumentação (Espresso) para garantir a qualidade e a estabilidade do código.
+      * Abra o projeto no Android Studio.
+      * Aguarde a sincronização do Gradle.
+      * Execute o aplicativo em um emulador ou dispositivo físico.
 
-## Autor
+## 📲 Download / Instalação
 
-[EmilioStuart](https://github.com/EmilioStuart)
+Você pode instalar o aplicativo diretamente no seu celular Android baixando o arquivo APK da nossa última release.
+
+[![Download APK](https://img.shields.io/badge/Download-APK%20v1.0.0-brightgreen?style=for-the-badge&logo=android)](LINK_DIRETO_QUE_VOCE_COPIOU)
+
+**Aviso:** Para instalar, você precisará habilitar a opção "Instalar de fontes desconhecidas" nas configurações de segurança do seu Android. Instale apenas arquivos APK de fontes que você confia.
+
+## 🔮 Próximos Passos e Melhorias
+
+  * **Cache Local (Room):** Implementar um banco de dados local com Room para persistir os dados dos Pokémon. Isso permitiria o funcionamento offline e uma inicialização quase instantânea do app.
+  * **Paginação (Paging 3):** Substituir a carga inicial de 151 Pokémon por um sistema de scroll infinito para exibir todos os Pokémon de forma performática.
+  * **Injeção de Dependência (Hilt):** Refatorar o projeto para usar Hilt, facilitando a testabilidade e o gerenciamento de dependências.
+  * **Testes Unitários:** Adicionar testes unitários para a lógica de negócio, como o processamento dos dados da API.
+
+## 👨‍💻 Autor
+
+  * [GitHub](https://github.com/EmilioStuart)
