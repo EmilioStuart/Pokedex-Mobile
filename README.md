@@ -81,7 +81,7 @@ Para clonar e executar esta aplicação, siga os passos:
 
 Você pode instalar o aplicativo diretamente no seu celular Android baixando o arquivo APK da nossa última release.
 
-[![Download APK](https://img.shields.io/badge/Download-APK%20v1.0.0-brightgreen?style=for-the-badge&logo=android)](LINK_DIRETO_QUE_VOCE_COPIOU)
+[![Download APK](https://img.shields.io/badge/Download-APK%20v1.0.0-brightgreen?style=for-the-badge&logo=android)](https://github.com/EmilioStuart/Pokedex-Mobile/releases/download/v1.0.0/app-debug.apk)
 
 **Aviso:** Para instalar, você precisará habilitar a opção "Instalar de fontes desconhecidas" nas configurações de segurança do seu Android. Instale apenas arquivos APK de fontes que você confia.
 
