@@ -1,4 +1,4 @@
-# 📱 Pokedex Mobile (Versão Completa)
+# 📱 Pokedex Mobile (V1.0.0)
 
 Uma Pokédex moderna e interativa desenvolvida em Java nativo para Android. Este projeto vai além de uma simples lista, integrando múltiplas chamadas de API em tempo real para enriquecer os dados, incluindo um serviço de tradução e uma interface dinâmica para explorar os detalhes, status e evoluções de cada Pokémon.
 
