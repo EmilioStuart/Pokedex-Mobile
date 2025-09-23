@@ -89,4 +89,4 @@ Você pode instalar o aplicativo diretamente no seu celular Android baixando o a
 
 ## 👨‍💻 Autor
 
-* **[GitHub](https://github.com/EmilioStuart)**
+* **[EmilioStuart](https://github.com/EmilioStuart)**
