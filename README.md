@@ -60,7 +60,7 @@ Para clonar e executar esta aplicação, siga os passos:
 
 2.  **Clonagem:**
     ```bash
-    git clone [https://github.com/EmilioStuart/Pokedex-Mobile.git](https://github.com/EmilioStuart/Pokedex-Mobile.git)
+    git clone https://github.com/EmilioStuart/Pokedex-Mobile.git
     ```
 
 3.  **Assets Necessários:**
