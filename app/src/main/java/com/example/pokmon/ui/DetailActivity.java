@@ -9,11 +9,13 @@ import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ViewFlipper;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.drawable.DrawableCompat;
@@ -40,19 +42,21 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class DetailActivity extends AppCompatActivity {
 
-    private ImageView pokemonSprite;
+    private ViewFlipper pokemonSpriteFlipper;
+    private ImageButton btnPrevSprite, btnNextSprite;
     private TextView pokemonNumber, pokemonName, pokemonHeight, pokemonWeight, pokemonDescription;
     private LinearLayout typesContainer;
     private LinearLayout individualStatsContainer;
     private LinearLayout evolutionChainContainer;
-    private FloatingActionButton fabShiny; // Declarando o FAB
+    private FloatingActionButton fabShiny;
     private PokeApiService pokeApiService;
     private TranslationApiService translationApiService;
     private int currentPokemonId;
 
-    private String normalSpriteUrl; // Para armazenar a URL da sprite normal
-    private String shinySpriteUrl;  // Para armazenar a URL da sprite shiny
-    private boolean isShinyShowing = false; // Estado para alternar entre normal/shiny
+    private final List<String> normalSpritesUrls = new ArrayList<>();
+    private final List<String> shinySpritesUrls = new ArrayList<>();
+    private boolean isShinyShowing = false;
+    private final List<PokemonSpeciesInfo> evolutionLine = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +65,8 @@ public class DetailActivity extends AppCompatActivity {
 
         initializeViews();
         setupRetrofitServices();
-        setupShinyFab(); // Configura o FAB do shiny
+        setupShinyFab();
+        setupSpriteNavigationButtons();
 
         currentPokemonId = getIntent().getIntExtra("POKEMON_ID", -1);
         if (currentPokemonId != -1) {
@@ -74,7 +79,9 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void initializeViews() {
-        pokemonSprite = findViewById(R.id.iv_detail_sprite);
+        pokemonSpriteFlipper = findViewById(R.id.vf_pokemon_sprites);
+        btnPrevSprite = findViewById(R.id.btn_prev_sprite);
+        btnNextSprite = findViewById(R.id.btn_next_sprite);
         pokemonNumber = findViewById(R.id.tv_detail_number);
         pokemonName = findViewById(R.id.tv_detail_name);
         pokemonHeight = findViewById(R.id.tv_detail_height);
@@ -83,7 +90,7 @@ public class DetailActivity extends AppCompatActivity {
         typesContainer = findViewById(R.id.ll_detail_types_container);
         individualStatsContainer = findViewById(R.id.ll_individual_stats_container);
         evolutionChainContainer = findViewById(R.id.ll_evolution_chain_container);
-        fabShiny = findViewById(R.id.fab_shiny); // Inicializando o FAB
+        fabShiny = findViewById(R.id.fab_shiny);
     }
 
     private void setupRetrofitServices() {
@@ -104,15 +111,15 @@ public class DetailActivity extends AppCompatActivity {
         fabShiny.setOnClickListener(v -> toggleShinySprite());
     }
 
-    private void toggleShinySprite() {
-        if (normalSpriteUrl == null || shinySpriteUrl == null) {
-            Toast.makeText(this, "Sprites shiny não disponíveis", Toast.LENGTH_SHORT).show();
-            return;
-        }
+    private void setupSpriteNavigationButtons() {
+        btnPrevSprite.setOnClickListener(v -> pokemonSpriteFlipper.showPrevious());
+        btnNextSprite.setOnClickListener(v -> pokemonSpriteFlipper.showNext());
+    }
 
-        isShinyShowing = !isShinyShowing; // Inverte o estado
-        String imageUrl = isShinyShowing ? shinySpriteUrl : normalSpriteUrl;
-        Glide.with(this).load(imageUrl).placeholder(R.drawable.pokeball_placeholder).into(pokemonSprite);
+    private void toggleShinySprite() {
+        isShinyShowing = !isShinyShowing;
+        updateMainSprites();
+        populateEvolutionChart();
     }
 
     private void fetchPokemonDetails(int pokemonId) {
@@ -121,14 +128,8 @@ public class DetailActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call<PokemonDetail> call, @NonNull Response<PokemonDetail> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     PokemonDetail detail = response.body();
-                    // Armazena os URLs das sprites
-                    if (detail.getSprites() != null && detail.getSprites().getOther() != null && detail.getSprites().getOther().getHome() != null) {
-                        normalSpriteUrl = detail.getSprites().getOther().getHome().getFrontDefault();
-                        shinySpriteUrl = detail.getSprites().getOther().getHome().getFrontShiny();
-                    }
+                    collectSpriteUrls(detail);
                     populateUI(detail);
-                } else {
-                    Toast.makeText(DetailActivity.this, "Falha ao carregar detalhes", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
@@ -137,6 +138,63 @@ public class DetailActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void collectSpriteUrls(PokemonDetail detail) {
+        normalSpritesUrls.clear();
+        shinySpritesUrls.clear();
+
+        if (detail.getSprites() != null) {
+            if (detail.getSprites().getOther() != null && detail.getSprites().getOther().getHome() != null) {
+                if (detail.getSprites().getOther().getHome().getFrontDefault() != null)
+                    normalSpritesUrls.add(detail.getSprites().getOther().getHome().getFrontDefault());
+                if (detail.getSprites().getOther().getHome().getFrontShiny() != null)
+                    shinySpritesUrls.add(detail.getSprites().getOther().getHome().getFrontShiny());
+            }
+            if (detail.getSprites().getOther() != null && detail.getSprites().getOther().getOfficialArtwork() != null) {
+                if (detail.getSprites().getOther().getOfficialArtwork().getFrontDefault() != null)
+                    normalSpritesUrls.add(detail.getSprites().getOther().getOfficialArtwork().getFrontDefault());
+                if (detail.getSprites().getOther().getOfficialArtwork().getFrontShiny() != null)
+                    shinySpritesUrls.add(detail.getSprites().getOther().getOfficialArtwork().getFrontShiny());
+            }
+            if (detail.getSprites().getFrontDefault() != null)
+                normalSpritesUrls.add(detail.getSprites().getFrontDefault());
+            if (detail.getSprites().getFrontShiny() != null)
+                shinySpritesUrls.add(detail.getSprites().getFrontShiny());
+        }
+    }
+
+    // Eu atualizo o ViewFlipper com os sprites corretos (normal ou shiny).
+    private void updateMainSprites() {
+        pokemonSpriteFlipper.removeAllViews();
+
+        List<String> urlsToLoad = isShinyShowing ? shinySpritesUrls : normalSpritesUrls;
+
+        if (urlsToLoad.isEmpty()) { // Fallback caso não encontre nenhuma URL
+            ImageView imageView = new ImageView(this);
+            imageView.setImageResource(R.drawable.pokeball_placeholder);
+            pokemonSpriteFlipper.addView(imageView);
+            return;
+        }
+
+        for (String url : urlsToLoad) {
+            ImageView imageView = new ImageView(this);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dpToPx(200), dpToPx(200));
+            imageView.setLayoutParams(params);
+            imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+            Glide.with(this)
+                    .load(url)
+                    .placeholder(R.drawable.pokeball_placeholder)
+                    .error(R.drawable.pokeball_placeholder)
+                    .into(imageView);
+            pokemonSpriteFlipper.addView(imageView);
+        }
+
+        if (pokemonSpriteFlipper.getChildCount() > 0) {
+            pokemonSpriteFlipper.setDisplayedChild(0);
+        }
+    }
+
 
     private void fetchPokemonSpecies(int pokemonId) {
         pokeApiService.getPokemonSpecies(pokemonId).enqueue(new Callback<PokemonSpecies>() {
@@ -169,9 +227,9 @@ public class DetailActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NonNull Call<EvolutionChainResponse> call, @NonNull Response<EvolutionChainResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    List<PokemonSpeciesInfo> evolutionLine = new ArrayList<>();
+                    evolutionLine.clear();
                     parseEvolutionChain(response.body().getChain(), evolutionLine);
-                    populateEvolutionChart(evolutionLine);
+                    populateEvolutionChart();
                 }
             }
             @Override
@@ -187,7 +245,7 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
-    private void populateEvolutionChart(List<PokemonSpeciesInfo> evolutionLine) {
+    private void populateEvolutionChart() {
         evolutionChainContainer.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
 
@@ -204,7 +262,12 @@ public class DetailActivity extends AppCompatActivity {
             String pokemonIdStr = urlParts[urlParts.length - 1];
             int pokemonId = Integer.parseInt(pokemonIdStr);
 
-            String imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/" + pokemonId + ".png";
+            String imageUrl;
+            if (isShinyShowing) {
+                imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/" + pokemonId + ".png";
+            } else {
+                imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + pokemonId + ".png";
+            }
 
             Glide.with(this).load(imageUrl).into(sprite);
 
@@ -254,15 +317,8 @@ public class DetailActivity extends AppCompatActivity {
         pokemonHeight.setText(String.format(Locale.getDefault(), "%.1f m", heightInMeters));
         pokemonWeight.setText(String.format(Locale.getDefault(), "%.1f kg", weightInKg));
 
-        // Aqui, usa o normalSpriteUrl para carregar a imagem inicial.
-        // O isShinyShowing é resetado para garantir que sempre comece no normal.
         isShinyShowing = false;
-        if (normalSpriteUrl != null) {
-            Glide.with(this).load(normalSpriteUrl).placeholder(R.drawable.pokeball_placeholder).into(pokemonSprite);
-        } else {
-            // Fallback caso normalSpriteUrl seja nulo por algum motivo
-            pokemonSprite.setImageResource(R.drawable.pokeball_placeholder);
-        }
+        updateMainSprites();
 
         typesContainer.removeAllViews();
         if (detail.getTypes() != null && !detail.getTypes().isEmpty()) {
@@ -286,7 +342,6 @@ public class DetailActivity extends AppCompatActivity {
                 if (i >= statLabels.size()) break;
 
                 View statRowView = inflater.inflate(R.layout.stat_item_layout, individualStatsContainer, false);
-
                 TextView statName = statRowView.findViewById(R.id.tv_stat_name);
                 ProgressBar statProgressBar = statRowView.findViewById(R.id.pb_stat);
                 TextView statValue = statRowView.findViewById(R.id.tv_stat_value);

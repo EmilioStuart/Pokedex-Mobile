@@ -21,8 +21,6 @@ public class PokemonDetail {
     public int getWeight() { return weight; }
     public List<Stats> getStats() { return stats; }
 
-    // --- Classes Aninhadas ---
-
     public static class Types {
         private Type type;
         public Type getType() { return type; }
@@ -36,15 +34,19 @@ public class PokemonDetail {
     public static class Sprites {
         @SerializedName("front_default")
         private String frontDefault;
+        @SerializedName("front_shiny")
+        private String frontShiny;
         private Other other;
         private Versions versions;
 
         public String getFrontDefault() { return frontDefault; }
+        public String getFrontShiny() { return frontShiny; }
         public Other getOther() { return other; }
         public Versions getVersions() { return versions; }
 
         public static class Other {
             private Home home;
+            @SerializedName("official-artwork")
             private OfficialArtwork officialArtwork;
 
             public Home getHome() { return home; }
@@ -54,21 +56,21 @@ public class PokemonDetail {
         public static class Home {
             @SerializedName("front_default")
             private String frontDefault;
-
-            // Eu adiciono este campo para capturar a URL do sprite shiny.
             @SerializedName("front_shiny")
             private String frontShiny;
 
             public String getFrontDefault() { return frontDefault; }
-
-            // E este é o método getter que estava faltando.
             public String getFrontShiny() { return frontShiny; }
         }
 
         public static class OfficialArtwork {
             @SerializedName("front_default")
             private String frontDefault;
+
+            @SerializedName("front_shiny")
+            private String frontShiny;
             public String getFrontDefault() { return frontDefault; }
+            public String getFrontShiny() { return frontShiny; }
         }
 
         public static class Versions {
