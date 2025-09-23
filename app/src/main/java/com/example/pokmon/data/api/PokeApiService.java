@@ -23,4 +23,8 @@ public interface PokeApiService {
     // Busca a cadeia evolutiva a partir de uma URL completa
     @GET
     Call<EvolutionChainResponse> getEvolutionChainByUrl(@Url String url);
+
+    // Busca os dados de uma geração específica da Pokédex pelo ID
+    @GET("generation/{id}")
+    Call<Generation> getGenerationData(@Path("id") int id);
 }

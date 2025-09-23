@@ -1,4 +1,4 @@
-package com.example.pokmon.adapter;
+package com.example.pokmon.adapters;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,10 +12,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
-import com.example.pokmon.ui.DetailActivity;
-import com.example.pokmon.data.models.PokemonDetail;
 import com.example.pokmon.R;
-
+import com.example.pokmon.data.api.PokeApiService;
+import com.example.pokmon.data.models.PokemonDetail;
+import com.example.pokmon.ui.DetailActivity;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -32,7 +32,7 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
 
     private final List<PokemonDetail> pokemonDetailList = new ArrayList<>();
     private final Context context;
-    private final com.example.pokmon.data.api.PokeApiService pokeApiService;
+    private final PokeApiService pokeApiService;
 
     public PokemonAdapter(Context context) {
         this.context = context;
@@ -40,7 +40,7 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
                 .baseUrl("https://pokeapi.co/api/v2/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        pokeApiService = retrofit.create(com.example.pokmon.data.api.PokeApiService.class);
+        pokeApiService = retrofit.create(PokeApiService.class);
     }
 
     public void sortList(SortType sortType) {
@@ -76,21 +76,14 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
         holder.pokemonNumber.setText(String.format(Locale.getDefault(), "Nº %04d", detail.getId()));
         holder.pokemonName.setText(detail.getName().substring(0, 1).toUpperCase() + detail.getName().substring(1));
 
-        // Eu implemento uma estratégia de fallback para a imagem do sprite. Dou prioridade
-        // ao sprite animado da 5ª geração, depois ao sprite 'home' de alta resolução e,
-        // por fim, ao sprite padrão, garantindo que eu sempre tenha uma imagem para exibir.
-        String imageUrl = null;
-        if (detail.getSprites() != null) {
-            if (detail.getSprites().getVersions() != null && detail.getSprites().getVersions().getGenerationV() != null && detail.getSprites().getVersions().getGenerationV().getBlackWhite() != null && detail.getSprites().getVersions().getGenerationV().getBlackWhite().getAnimated() != null && detail.getSprites().getVersions().getGenerationV().getBlackWhite().getAnimated().getFrontDefault() != null) {
-                imageUrl = detail.getSprites().getVersions().getGenerationV().getBlackWhite().getAnimated().getFrontDefault();
-            } else if (detail.getSprites().getOther() != null && detail.getSprites().getOther().getHome() != null && detail.getSprites().getOther().getHome().getFrontDefault() != null) {
-                imageUrl = detail.getSprites().getOther().getHome().getFrontDefault();
-            } else {
-                imageUrl = detail.getSprites().getFrontDefault();
-            }
-        }
+        String imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/" + detail.getId() + ".gif";
 
-        Glide.with(context).load(imageUrl).placeholder(R.drawable.pokeball_placeholder).error(R.drawable.pokeball_placeholder).into(holder.pokemonSprite);
+        Glide.with(context)
+                .asGif()
+                .load(imageUrl)
+                .placeholder(R.drawable.pokeball_placeholder)
+                .error(R.drawable.pokeball_placeholder)
+                .into(holder.pokemonSprite);
 
         holder.pokemonTypesContainer.removeAllViews();
         if (detail.getTypes() != null && !detail.getTypes().isEmpty()) {
@@ -113,7 +106,6 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
     private ImageView createTypeImageView(String typeName) {
         ImageView imageView = new ImageView(context);
         String resourceName = typeName.toLowerCase(Locale.ROOT) + "_type";
-
         int resourceId = context.getResources().getIdentifier(resourceName, "drawable", context.getPackageName());
         if (resourceId != 0) {
             imageView.setImageResource(resourceId);

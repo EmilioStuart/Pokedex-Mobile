@@ -32,6 +32,7 @@ import com.example.pokmon.data.models.TranslationResponse;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import retrofit2.Call;
@@ -56,7 +57,9 @@ public class DetailActivity extends AppCompatActivity {
     private final List<String> normalSpritesUrls = new ArrayList<>();
     private final List<String> shinySpritesUrls = new ArrayList<>();
     private boolean isShinyShowing = false;
-    private final List<PokemonSpeciesInfo> evolutionLine = new ArrayList<>();
+
+    private final List<PokemonDetail> evolutionChainDetails = new ArrayList<>();
+    private int evolutionDetailsFetchedCounter = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,13 +166,12 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
-    // Eu atualizo o ViewFlipper com os sprites corretos (normal ou shiny).
     private void updateMainSprites() {
+        int currentIndex = pokemonSpriteFlipper.getDisplayedChild();
         pokemonSpriteFlipper.removeAllViews();
-
         List<String> urlsToLoad = isShinyShowing ? shinySpritesUrls : normalSpritesUrls;
 
-        if (urlsToLoad.isEmpty()) { // Fallback caso não encontre nenhuma URL
+        if (urlsToLoad.isEmpty()) {
             ImageView imageView = new ImageView(this);
             imageView.setImageResource(R.drawable.pokeball_placeholder);
             pokemonSpriteFlipper.addView(imageView);
@@ -182,19 +184,14 @@ public class DetailActivity extends AppCompatActivity {
             imageView.setLayoutParams(params);
             imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
-            Glide.with(this)
-                    .load(url)
-                    .placeholder(R.drawable.pokeball_placeholder)
-                    .error(R.drawable.pokeball_placeholder)
-                    .into(imageView);
+            Glide.with(this).load(url).placeholder(R.drawable.pokeball_placeholder).error(R.drawable.pokeball_placeholder).into(imageView);
             pokemonSpriteFlipper.addView(imageView);
         }
 
-        if (pokemonSpriteFlipper.getChildCount() > 0) {
-            pokemonSpriteFlipper.setDisplayedChild(0);
+        if (pokemonSpriteFlipper.getChildCount() > 0 && currentIndex >= 0 && currentIndex < pokemonSpriteFlipper.getChildCount()) {
+            pokemonSpriteFlipper.setDisplayedChild(currentIndex);
         }
     }
-
 
     private void fetchPokemonSpecies(int pokemonId) {
         pokeApiService.getPokemonSpecies(pokemonId).enqueue(new Callback<PokemonSpecies>() {
@@ -227,14 +224,48 @@ public class DetailActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NonNull Call<EvolutionChainResponse> call, @NonNull Response<EvolutionChainResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    evolutionLine.clear();
+                    List<PokemonSpeciesInfo> evolutionLine = new ArrayList<>();
                     parseEvolutionChain(response.body().getChain(), evolutionLine);
-                    populateEvolutionChart();
+
+                    evolutionChainDetails.clear();
+                    evolutionDetailsFetchedCounter = 0;
+                    if (evolutionLine.isEmpty()) return;
+
+                    for (PokemonSpeciesInfo species : evolutionLine) {
+                        fetchDetailsForEvolutionStage(species, evolutionLine.size());
+                    }
                 }
             }
             @Override
             public void onFailure(@NonNull Call<EvolutionChainResponse> call, @NonNull Throwable t) {}
         });
+    }
+
+    private void fetchDetailsForEvolutionStage(PokemonSpeciesInfo species, int totalToFetch) {
+        pokeApiService.getPokemonDetail(species.getName()).enqueue(new Callback<PokemonDetail>() {
+            @Override
+            public void onResponse(@NonNull Call<PokemonDetail> call, @NonNull Response<PokemonDetail> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    evolutionChainDetails.add(response.body());
+                }
+                evolutionDetailsFetchedCounter++;
+                if (evolutionDetailsFetchedCounter == totalToFetch) {
+                    onAllEvolutionDetailsFetched();
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<PokemonDetail> call, @NonNull Throwable t) {
+                evolutionDetailsFetchedCounter++;
+                if (evolutionDetailsFetchedCounter == totalToFetch) {
+                    onAllEvolutionDetailsFetched();
+                }
+            }
+        });
+    }
+
+    private void onAllEvolutionDetailsFetched() {
+        evolutionChainDetails.sort(Comparator.comparingInt(PokemonDetail::getId));
+        populateEvolutionChart();
     }
 
     private void parseEvolutionChain(ChainLink chainLink, List<PokemonSpeciesInfo> evolutionLine) {
@@ -249,32 +280,28 @@ public class DetailActivity extends AppCompatActivity {
         evolutionChainContainer.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
 
-        for (int i = 0; i < evolutionLine.size(); i++) {
-            PokemonSpeciesInfo species = evolutionLine.get(i);
+        for (int i = 0; i < evolutionChainDetails.size(); i++) {
+            PokemonDetail detail = evolutionChainDetails.get(i);
 
             View stageView = inflater.inflate(R.layout.evolution_stage_item, evolutionChainContainer, false);
             ImageView sprite = stageView.findViewById(R.id.iv_evolution_sprite);
             TextView name = stageView.findViewById(R.id.tv_evolution_name);
 
-            name.setText(species.getName().substring(0, 1).toUpperCase() + species.getName().substring(1));
-
-            String[] urlParts = species.getUrl().split("/");
-            String pokemonIdStr = urlParts[urlParts.length - 1];
-            int pokemonId = Integer.parseInt(pokemonIdStr);
+            name.setText(detail.getName().substring(0, 1).toUpperCase() + detail.getName().substring(1));
 
             String imageUrl;
             if (isShinyShowing) {
-                imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/" + pokemonId + ".png";
+                imageUrl = detail.getSprites().getOther().getOfficialArtwork().getFrontShiny();
             } else {
-                imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + pokemonId + ".png";
+                imageUrl = detail.getSprites().getOther().getOfficialArtwork().getFrontDefault();
             }
 
             Glide.with(this).load(imageUrl).into(sprite);
 
-            if (pokemonId != this.currentPokemonId) {
+            if (detail.getId() != this.currentPokemonId) {
                 stageView.setOnClickListener(v -> {
                     Intent intent = new Intent(DetailActivity.this, DetailActivity.class);
-                    intent.putExtra("POKEMON_ID", pokemonId);
+                    intent.putExtra("POKEMON_ID", detail.getId());
                     startActivity(intent);
                     finish();
                 });
@@ -282,7 +309,7 @@ public class DetailActivity extends AppCompatActivity {
 
             evolutionChainContainer.addView(stageView);
 
-            if (i < evolutionLine.size() - 1) {
+            if (i < evolutionChainDetails.size() - 1) {
                 ImageView arrow = new ImageView(this);
                 arrow.setImageResource(R.drawable.ic_arrow_forward);
                 evolutionChainContainer.addView(arrow);

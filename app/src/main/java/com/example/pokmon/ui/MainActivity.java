@@ -1,10 +1,12 @@
 package com.example.pokmon.ui;
 
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
 import android.widget.SearchView;
+import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -13,14 +15,13 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.pokmon.R;
-import com.example.pokmon.adapter.PokemonAdapter;
+import com.example.pokmon.adapters.PokemonAdapter;
 import com.example.pokmon.data.api.PokeApiService;
-import com.example.pokmon.data.models.Pokemon;
+import com.example.pokmon.data.models.Generation;
 import com.example.pokmon.data.models.PokemonDetail;
-import com.example.pokmon.data.models.PokemonResponse;
+import com.example.pokmon.data.models.PokemonSpeciesInfo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -37,10 +38,10 @@ public class MainActivity extends AppCompatActivity {
     private SearchView searchView;
     private FloatingActionButton fabSort;
     private ProgressBar progressBar;
+    private Spinner generationSpinner;
     private PokeApiService pokeApiService;
-    private MediaPlayer mediaPlayer;
 
-    private final List<PokemonDetail> initialPokemonDetails = new ArrayList<>();
+    private final List<PokemonDetail> currentPokemonDetails = new ArrayList<>();
     private int detailsFetchedCounter = 0;
 
     @Override
@@ -48,16 +49,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mediaPlayer = MediaPlayer.create(this, R.raw.opening_pokemon_emerald);
-        mediaPlayer.setLooping(true);
-        mediaPlayer.start();
-
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
         recyclerView = findViewById(R.id.recycler_view_pokedex);
         searchView = findViewById(R.id.search_view);
         fabSort = findViewById(R.id.fab_sort);
         progressBar = findViewById(R.id.progress_bar);
+        generationSpinner = findViewById(R.id.spinner_generation);
 
         setupRetrofit();
         pokemonAdapter = new PokemonAdapter(this);
@@ -66,17 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
         setupSearchView();
         setupSortFab();
-        fetchInitialPokemonData();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mediaPlayer != null) {
-            mediaPlayer.stop();
-            mediaPlayer.release();
-            mediaPlayer = null;
-        }
+        setupGenerationSpinner();
     }
 
     private void setupRetrofit() {
@@ -87,72 +75,85 @@ public class MainActivity extends AppCompatActivity {
         pokeApiService = retrofit.create(PokeApiService.class);
     }
 
-    private void fetchInitialPokemonData() {
-        // Eu torno a ProgressBar visível ANTES de iniciar a chamada de rede.
-        progressBar.setVisibility(View.VISIBLE);
-        pokeApiService.getPokemonList(151).enqueue(new Callback<PokemonResponse>() {
+    private void setupGenerationSpinner() {
+        String[] generations = {"Gen 1", "Gen 2", "Gen 3", "Gen 4", "Gen 5", "Gen 6", "Gen 7", "Gen 8", "Gen 9"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, generations);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        generationSpinner.setAdapter(adapter);
+
+        generationSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onResponse(@NonNull Call<PokemonResponse> call, @NonNull Response<PokemonResponse> response) {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                fetchGenerationData(position + 1);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
+    private void fetchGenerationData(int generationId) {
+        progressBar.setVisibility(View.VISIBLE);
+        pokemonAdapter.submitList(new ArrayList<>());
+
+        pokeApiService.getGenerationData(generationId).enqueue(new Callback<Generation>() {
+            @Override
+            public void onResponse(@NonNull Call<Generation> call, @NonNull Response<Generation> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    List<Pokemon> pokemonNameList = response.body().getResults();
-                    initialPokemonDetails.clear();
+                    List<PokemonSpeciesInfo> speciesList = response.body().getPokemonSpecies();
+                    currentPokemonDetails.clear();
                     detailsFetchedCounter = 0;
-                    if (pokemonNameList.isEmpty()) {
+                    if (speciesList.isEmpty()) {
                         progressBar.setVisibility(View.GONE);
                         return;
                     }
-                    for (Pokemon pokemon : pokemonNameList) {
-                        fetchDetailsForPokemon(pokemon, pokemonNameList.size());
+                    for (PokemonSpeciesInfo species : speciesList) {
+                        fetchDetailsForPokemon(species, speciesList.size());
                     }
                 } else {
                     progressBar.setVisibility(View.GONE);
                 }
             }
-
             @Override
-            public void onFailure(@NonNull Call<PokemonResponse> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<Generation> call, @NonNull Throwable t) {
                 progressBar.setVisibility(View.GONE);
-                Toast.makeText(MainActivity.this, "Falha ao buscar dados", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Falha ao buscar dados da geração", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void fetchDetailsForPokemon(Pokemon pokemon, int totalToFetch) {
-        String idOrName = pokemon.getUrl().split("/")[6];
-        pokeApiService.getPokemonDetail(idOrName).enqueue(new Callback<PokemonDetail>() {
+    private void fetchDetailsForPokemon(PokemonSpeciesInfo species, int totalToFetch) {
+        pokeApiService.getPokemonDetail(species.getName()).enqueue(new Callback<PokemonDetail>() {
             @Override
             public void onResponse(@NonNull Call<PokemonDetail> call, @NonNull Response<PokemonDetail> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    initialPokemonDetails.add(response.body());
+                    currentPokemonDetails.add(response.body());
                 }
                 detailsFetchedCounter++;
                 if (detailsFetchedCounter == totalToFetch) {
-                    onAllInitialDetailsFetched();
+                    onAllDetailsFetched();
                 }
             }
-
             @Override
             public void onFailure(@NonNull Call<PokemonDetail> call, @NonNull Throwable t) {
                 detailsFetchedCounter++;
                 if (detailsFetchedCounter == totalToFetch) {
-                    onAllInitialDetailsFetched();
+                    onAllDetailsFetched();
                 }
             }
         });
     }
 
-    // Este método é o ponto final do carregamento inicial. É aqui que eu escondo a ProgressBar.
-    private void onAllInitialDetailsFetched() {
+    private void onAllDetailsFetched() {
         progressBar.setVisibility(View.GONE);
-        initialPokemonDetails.sort(Comparator.comparingInt(PokemonDetail::getId));
-        pokemonAdapter.submitList(new ArrayList<>(initialPokemonDetails));
+        currentPokemonDetails.sort(Comparator.comparingInt(PokemonDetail::getId));
+        pokemonAdapter.submitList(new ArrayList<>(currentPokemonDetails));
     }
 
     private void setupSearchView() {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                // Ao submeter, eu chamo a lógica de filtro local.
                 filterLocalList(query);
                 searchView.clearFocus();
                 return true;
@@ -160,7 +161,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                // Se o usuário limpar o campo, eu restauro a lista inicial.
                 if (newText.isEmpty()) {
                     filterLocalList(newText);
                 }
@@ -172,11 +172,9 @@ public class MainActivity extends AppCompatActivity {
     private void filterLocalList(String query) {
         List<PokemonDetail> filteredList = new ArrayList<>();
         if (query.isEmpty()) {
-            filteredList.addAll(initialPokemonDetails);
+            filteredList.addAll(currentPokemonDetails);
         } else {
-            for (PokemonDetail pokemon : initialPokemonDetails) {
-                // Eu troco 'contains' por 'startsWith' para buscar
-                // apenas os Pokémon cujo nome começa com o texto da query.
+            for (PokemonDetail pokemon : currentPokemonDetails) {
                 if (pokemon.getName().toLowerCase(Locale.ROOT).startsWith(query.toLowerCase(Locale.ROOT))) {
                     filteredList.add(pokemon);
                 }
@@ -184,7 +182,6 @@ public class MainActivity extends AppCompatActivity {
         }
         pokemonAdapter.submitList(filteredList);
     }
-
 
     private void setupSortFab() {
         fabSort.setOnClickListener(view -> {
