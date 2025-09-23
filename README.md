@@ -55,7 +55,7 @@ A arquitetura do app foi projetada para ser desacoplada e escalável, separando 
 Para clonar e executar esta aplicação, siga os passos:
 
 1.  **Pré-requisitos:**
-    * Android Studio (versão Hedgehog ou superior)
+    * Android Studio (versão Narwhal ou superior)
     * Git
 
 2.  **Clonagem:**
