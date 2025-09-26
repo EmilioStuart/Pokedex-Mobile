@@ -1,4 +1,4 @@
-# 📱 Purpura Pokedex (v2.0.0)
+# 📱 Pokedex Mobile (v2.0.0)
 
 ![Java](https://img.shields.io/badge/Language-Java-orange?style=for-the-badge&logo=android)
 ![API](https://img.shields.io/badge/API-PokeAPI%20%26%20MyMemory-red?style=for-the-badge)
