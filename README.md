@@ -60,14 +60,10 @@ A arquitetura do app foi reestruturada para suportar um fluxo de navegação mai
 
 2.  **Clonagem:**
     ```bash
-    git clone [https://github.com/EmilioStuart/Pokedex-Mobile.git](https://github.com/EmilioStuart/Pokedex-Mobile.git)
+    git clone https://github.com/EmilioStuart/Pokedex-Mobile.git
     ```
 
-3.  **Assets Necessários:**
-    * **Ícones dos Tipos:** Adicione os arquivos `.png` para cada tipo na pasta `app/src/main/res/drawable`. O nome de cada arquivo deve seguir o padrão `nomedotipoemingles_type.png` (ex: `fire_type.png`).
-    * **Música de Fundo:** Adicione o arquivo de áudio `opening_pokemon_emerald.mp3` na pasta `app/src/main/res/raw`.
-
-4.  **Build e Execução:**
+3.  **Build e Execução:**
     * Abra o projeto no Android Studio, aguarde a sincronização do Gradle e execute.
 
 ## 📲 Download / Instalação
