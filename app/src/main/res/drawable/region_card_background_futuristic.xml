@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/futuristic_background_dark" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+
+    <item
+        android:left="-100dp"
+        android:right="150dp"
+        android:top="-150dp"
+        android:bottom="50dp">
+        <rotate android:fromDegrees="-30">
+            <shape android:shape="rectangle">
+                <gradient
+                    android:angle="0"
+                    android:startColor="@color/futuristic_accent_orange"
+                    android:endColor="@android:color/transparent"
+                    android:type="linear" />
+            </shape>
+        </rotate>
+    </item>
+
+</layer-list>

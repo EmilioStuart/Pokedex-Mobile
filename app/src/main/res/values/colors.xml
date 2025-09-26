@@ -1,5 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="md_theme_primary">#DC4405</color>
+    <color name="md_theme_onPrimary">#FFFFFF</color>
+    <color name="md_theme_primaryContainer">#FFDBCC</color>
+    <color name="md_theme_onPrimaryContainer">#350F00</color>
+    <color name="md_theme_secondary">#FF7043</color>
+    <color name="md_theme_onSecondary">#FFFFFF</color>
+    <color name="md_theme_secondaryContainer">#FFDAC9</color>
+    <color name="md_theme_onSecondaryContainer">#2C150B</color>
+    <color name="md_theme_tertiary">#FFB74D</color>
+    <color name="md_theme_onTertiary">#FFFFFF</color>
+    <color name="md_theme_tertiaryContainer">#FFDABF</color>
+    <color name="md_theme_onTertiaryContainer">#3F1700</color>
+    <color name="md_theme_error">#BA1A1A</color>
+    <color name="md_theme_onError">#FFFFFF</color>
+    <color name="md_theme_errorContainer">#FFDAD6</color>
+    <color name="md_theme_onErrorContainer">#410002</color>
+    <color name="md_theme_background">#FFFFFF</color>
+    <color name="md_theme_onBackground">#1F1A17</color>
+    <color name="md_theme_surface">#FFFFFF</color>
+    <color name="md_theme_onSurface">#1F1A17</color>
+    <color name="md_theme_surfaceVariant">#F4DED5</color>
+    <color name="md_theme_onSurfaceVariant">#52443D</color>
+    <color name="md_theme_outline">#84746B</color>
+    <color name="md_theme_shadow">#000000</color>
+    <color name="md_theme_inverseSurface">#342F2B</color>
+    <color name="md_theme_inverseOnSurface">#F8EDE9</color>
+    <color name="md_theme_inversePrimary">#FFB79B</color>
+    <color name="md_theme_surfaceTint">#DC4405</color>
+    <color name="md_theme_outlineVariant">#D7C2BA</color>
+    <color name="md_theme_scrim">#000000</color>
+
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="text_light_primary">#FFFFFFFF</color>
+    <color name="text_light_secondary">#CCCCCCFF</color>
+    <color name="card_dark_background">#FF2D2D2D</color>
+
+    <color name="orange_light">#FF7043</color>
+    <color name="blue_light">#81D4FA</color>
+    <color name="futuristic_pod_background">#3A3A3A</color>
+    <color name="futuristic_accent_orange">#DC4405</color>
+    <color name="futuristic_background_dark">#121212</color>
+    <color name="futuristic_glow_color">#40FFFFFF</color>
+
 </resources>

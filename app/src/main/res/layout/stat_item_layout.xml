@@ -14,7 +14,7 @@
         android:layout_weight="1"
         android:text="Atributo"
         android:textSize="16sp"
-        android:textColor="@android:color/black"/>
+        android:textColor="@color/text_light_primary"/>
 
     <ProgressBar
         android:id="@+id/pb_stat"
@@ -36,6 +36,6 @@
         android:textSize="16sp"
         android:minWidth="35dp"
         android:gravity="end"
-        android:textColor="@android:color/black"/>
+        android:textColor="@color/text_light_primary"/>
 
 </LinearLayout>

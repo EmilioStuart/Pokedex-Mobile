@@ -2,16 +2,14 @@ package com.example.pokmon.ui;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
 import android.widget.SearchView;
-import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.pokmon.R;
@@ -31,14 +29,13 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity {
+public class PokemonGridActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private PokemonAdapter pokemonAdapter;
     private SearchView searchView;
     private FloatingActionButton fabSort;
     private ProgressBar progressBar;
-    private Spinner generationSpinner;
     private PokeApiService pokeApiService;
 
     private final List<PokemonDetail> currentPokemonDetails = new ArrayList<>();
@@ -47,15 +44,27 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_pokemon_grid);
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
+
+        String regionName = getIntent().getStringExtra("REGION_NAME");
+        int generationId = getIntent().getIntExtra("GENERATION_ID", 1); // Padrão para Gen 1
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(regionName);
+        }
 
         recyclerView = findViewById(R.id.recycler_view_pokedex);
         searchView = findViewById(R.id.search_view);
         fabSort = findViewById(R.id.fab_sort);
         progressBar = findViewById(R.id.progress_bar);
-        generationSpinner = findViewById(R.id.spinner_generation);
 
         setupRetrofit();
         pokemonAdapter = new PokemonAdapter(this);
@@ -64,7 +73,14 @@ public class MainActivity extends AppCompatActivity {
 
         setupSearchView();
         setupSortFab();
-        setupGenerationSpinner();
+
+        fetchGenerationData(generationId);
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
     }
 
     private void setupRetrofit() {
@@ -73,23 +89,6 @@ public class MainActivity extends AppCompatActivity {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         pokeApiService = retrofit.create(PokeApiService.class);
-    }
-
-    private void setupGenerationSpinner() {
-        String[] generations = {"Gen 1", "Gen 2", "Gen 3", "Gen 4", "Gen 5", "Gen 6", "Gen 7", "Gen 8", "Gen 9"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, generations);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        generationSpinner.setAdapter(adapter);
-
-        generationSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                fetchGenerationData(position + 1);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
     }
 
     private void fetchGenerationData(int generationId) {
@@ -117,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Call<Generation> call, @NonNull Throwable t) {
                 progressBar.setVisibility(View.GONE);
-                Toast.makeText(MainActivity.this, "Falha ao buscar dados da geração", Toast.LENGTH_SHORT).show();
+                Toast.makeText(PokemonGridActivity.this, "Falha ao buscar dados da geração", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -161,9 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (newText.isEmpty()) {
-                    filterLocalList(newText);
-                }
+                filterLocalList(newText);
                 return true;
             }
         });

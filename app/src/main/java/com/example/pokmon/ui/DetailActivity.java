@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.util.TypedValue;
@@ -18,6 +19,8 @@ import android.widget.Toast;
 import android.widget.ViewFlipper;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.graphics.drawable.DrawableCompat;
 import com.bumptech.glide.Glide;
 import com.example.pokmon.R;
@@ -33,16 +36,20 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class DetailActivity extends AppCompatActivity {
+public class DetailActivity extends BaseActivity {
 
+    private Toolbar toolbar;
+    private CoordinatorLayout detailLayout;
     private ViewFlipper pokemonSpriteFlipper;
     private ImageButton btnPrevSprite, btnNextSprite;
     private TextView pokemonNumber, pokemonName, pokemonHeight, pokemonWeight, pokemonDescription;
@@ -57,9 +64,9 @@ public class DetailActivity extends AppCompatActivity {
     private final List<String> normalSpritesUrls = new ArrayList<>();
     private final List<String> shinySpritesUrls = new ArrayList<>();
     private boolean isShinyShowing = false;
-
     private final List<PokemonDetail> evolutionChainDetails = new ArrayList<>();
     private int evolutionDetailsFetchedCounter = 0;
+    private final Map<String, int[]> typeColorMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +74,15 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
 
         initializeViews();
+
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
+
         setupRetrofitServices();
+        populateTypeColorMap();
         setupShinyFab();
         setupSpriteNavigationButtons();
 
@@ -81,7 +96,15 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
+    }
+
     private void initializeViews() {
+        toolbar = findViewById(R.id.toolbar_detail);
+        detailLayout = findViewById(R.id.detail_coordinator_layout);
         pokemonSpriteFlipper = findViewById(R.id.vf_pokemon_sprites);
         btnPrevSprite = findViewById(R.id.btn_prev_sprite);
         btnNextSprite = findViewById(R.id.btn_next_sprite);
@@ -110,6 +133,27 @@ public class DetailActivity extends AppCompatActivity {
         translationApiService = translationRetrofit.create(TranslationApiService.class);
     }
 
+    private void populateTypeColorMap() {
+        typeColorMap.put("grass", new int[]{Color.parseColor("#4CAF50"), Color.parseColor("#388E3C")});
+        typeColorMap.put("fire", new int[]{Color.parseColor("#F44336"), Color.parseColor("#D32F2F")});
+        typeColorMap.put("water", new int[]{Color.parseColor("#2196F3"), Color.parseColor("#1976D2")});
+        typeColorMap.put("bug", new int[]{Color.parseColor("#8BC34A"), Color.parseColor("#689F38")});
+        typeColorMap.put("normal", new int[]{Color.parseColor("#9E9E9E"), Color.parseColor("#616161")});
+        typeColorMap.put("poison", new int[]{Color.parseColor("#9C27B0"), Color.parseColor("#7B1FA2")});
+        typeColorMap.put("electric", new int[]{Color.parseColor("#FFEB3B"), Color.parseColor("#FBC02D")});
+        typeColorMap.put("ground", new int[]{Color.parseColor("#795548"), Color.parseColor("#5D4037")});
+        typeColorMap.put("fairy", new int[]{Color.parseColor("#E91E63"), Color.parseColor("#C2185B")});
+        typeColorMap.put("fighting", new int[]{Color.parseColor("#E65100"), Color.parseColor("#BF360C")});
+        typeColorMap.put("psychic", new int[]{Color.parseColor("#F06292"), Color.parseColor("#EC407A")});
+        typeColorMap.put("rock", new int[]{Color.parseColor("#A1887F"), Color.parseColor("#795548")});
+        typeColorMap.put("ghost", new int[]{Color.parseColor("#673AB7"), Color.parseColor("#512DA8")});
+        typeColorMap.put("ice", new int[]{Color.parseColor("#4FC3F7"), Color.parseColor("#03A9F4")});
+        typeColorMap.put("dragon", new int[]{Color.parseColor("#5C6BC0"), Color.parseColor("#3F51B5")});
+        typeColorMap.put("dark", new int[]{Color.parseColor("#424242"), Color.parseColor("#212121")});
+        typeColorMap.put("steel", new int[]{Color.parseColor("#B0BEC5"), Color.parseColor("#78909C")});
+        typeColorMap.put("flying", new int[]{Color.parseColor("#64B5F6"), Color.parseColor("#42A5F5")});
+    }
+
     private void setupShinyFab() {
         fabShiny.setOnClickListener(v -> toggleShinySprite());
     }
@@ -133,6 +177,11 @@ public class DetailActivity extends AppCompatActivity {
                     PokemonDetail detail = response.body();
                     collectSpriteUrls(detail);
                     populateUI(detail);
+
+                    if (detail.getTypes() != null && !detail.getTypes().isEmpty()) {
+                        String firstType = detail.getTypes().get(0).getType().getName();
+                        updateBackgroundColor(firstType);
+                    }
                 }
             }
             @Override
@@ -140,6 +189,12 @@ public class DetailActivity extends AppCompatActivity {
                 Toast.makeText(DetailActivity.this, "Erro de rede: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void updateBackgroundColor(String typeName) {
+        int[] colors = typeColorMap.getOrDefault(typeName, new int[]{Color.parseColor("#FF7043"), Color.parseColor("#DC4405")});
+        GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, colors);
+        detailLayout.setBackground(gradientDrawable);
     }
 
     private void collectSpriteUrls(PokemonDetail detail) {
@@ -414,6 +469,8 @@ public class DetailActivity extends AppCompatActivity {
 
         return imageView;
     }
+
+
 
     private int dpToPx(int dp) {
         return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
