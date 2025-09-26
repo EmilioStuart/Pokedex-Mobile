@@ -64,12 +64,12 @@ A arquitetura do app foi reestruturada para suportar um fluxo de navegação mai
 ## 🚀 Como Executar o Projeto
 
 1.  **Pré-requisitos:**
-    * Android Studio (versão Hedgehog ou superior)
+    * Android Studio (versão Narwhal ou superior)
     * Git
 
 2.  **Clonagem:**
     ```bash
-    git clone [https://github.com/EmilioStuart/Pokedex-Mobile.git](https://github.com/EmilioStuart/Pokedex-Mobile.git)
+    git clone https://github.com/EmilioStuart/Pokedex-Mobile.git
     ```
 
 3.  **Build e Execução:**
