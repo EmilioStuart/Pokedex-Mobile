@@ -1,10 +1,16 @@
-# 📱 Pokedex Mobile (v2.0.0)
+# 📱 Purpura Pokedex (v2.0.0)
 
 ![Java](https://img.shields.io/badge/Language-Java-orange?style=for-the-badge&logo=android)
 ![API](https://img.shields.io/badge/API-PokeAPI%20%26%20MyMemory-red?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 Uma Pokédex moderna e interativa desenvolvida em Java nativo para Android, inspirada na interface do Pokémon GO. Este projeto representa uma refatoração completa de uma Pokédex básica para uma aplicação rica em funcionalidades, com um novo fluxo de navegação, design system customizado e integração de múltiplas APIs para enriquecimento de dados em tempo real.
+
+## ⭐ Apoie o Projeto!
+
+Se você gostou deste projeto, aprendeu algo novo ou o usou como inspiração, por favor, considere dar uma **estrelinha ⭐** no repositório! Isso ajuda o projeto a ganhar visibilidade e me motiva a continuar desenvolvendo e adicionando novas funcionalidades.
+
+[![GitHub stars](https://img.shields.io/github/stars/EmilioStuart/Pokedex-Mobile?style=social)](https://github.com/EmilioStuart/Pokedex-Mobile/stargazers)
 
 ## 🎥 Demonstração em Vídeo
 
@@ -23,16 +29,19 @@ O aplicativo foi completamente redesenhado com um novo fluxo de navegação e um
 
 #### Pokemon Grid Screen (`PokemonGridActivity`)
 * **🖼️ Grade Regional:** Exibe todos os Pokémon pertencentes à região selecionada em um grid customizado.
-* **🔍 Busca por Prefixo:** Filtra a lista de Pokémon da geração atual, exibindo instantaneamente os resultados que começam com o texto digitado.
-* **⇅ Ordenação Dinâmica:** Um `FloatingActionButton` abre um menu para reordenar a lista por Número (crescente/decrescente) ou Nome (A-Z/Z-A).
+* **🔍 Busca por Prefixo:** A busca filtra a lista de Pokémon da geração atual, exibindo instantaneamente os resultados que começam com o texto digitado.
+* **⇅ Ordenação Dinâmica:** Um `FloatingActionButton` abre um menu para reordenar a lista por:
+    * Número (Crescente ou Decrescente)
+    * Nome (A-Z ou Z-A)
+* **🔄 Indicador de Carregamento:** Um GIF animado é exibido durante as operações de rede para fornecer feedback visual ao usuário.
+* **🎨 UI Consistente:** O app opera exclusivamente em Modo Claro e com a orientação travada no modo Retrato para garantir uma experiência de usuário estável e consistente.
 
 #### Tela de Detalhes (`DetailActivity`) - *Completamente Redesenhada*
-* **🎨 Fundo Dinâmico:** O plano de fundo da tela muda de cor com um degradê baseado no tipo principal do Pokémon exibido.
-* **🎠 Carrossel de Sprites Interativo:** Visualize múltiplos sprites do Pokémon (3D, Artwork Oficial, Pixelado) através de um carrossel com botões de navegação.
-* **✨ Alternância de Sprites (Normal/Shiny):** Um `FloatingActionButton` permite ao usuário alternar instantaneamente **todas** as imagens (carrossel principal e cadeia de evolução) para suas versões *shiny*.
-* **📜 Descrição Traduzida:** A descrição da Pokédex é obtida em inglês e traduzida para o português em tempo real via MyMemory Translation API, com uma mensagem de "Traduzindo..." durante o processo.
-* **📊 Gráfico de Atributos:** Os status base (HP, Ataque, etc.) são exibidos com barras de progresso customizadas e com **cores condicionais** (vermelho, amarelo, verde) baseadas no valor.
-* **🧬 Cadeia de Evolução Interativa:** Uma linha do tempo horizontal exibe a cadeia de evolução com sprites de alta qualidade. Clicar em uma evolução **recarrega a tela** com as informações do Pokémon selecionado.
+* **✨ Alternância de Sprite (Normal/Shiny):** Um `FloatingActionButton` e um carrossel de imagens permitem ao usuário visualizar múltiplos sprites do Pokémon (3D, Artwork Oficial, Pixelado) e alternar para suas versões *shiny*.
+* **📜 Descrição Traduzida:** A descrição da Pokédex é obtida em inglês e traduzida para o português em tempo real através da integração com a MyMemory Translation API.
+* **📊 Gráfico de Atributos:** Os status base (HP, Ataque, Defesa, etc.) são exibidos com barras de progresso customizadas e com **cores condicionais** (vermelho, amarelo, verde) baseadas no valor do atributo.
+* **🧬 Cadeia de Evolução Interativa:** Uma linha do tempo horizontal e rolável exibe toda a cadeia de evolução do Pokémon. Clicar em uma das evoluções **recarrega a tela de detalhes** com as informações do Pokémon selecionado.
+* **🎨 Ícones de Tipo Customizados:** Os tipos do Pokémon são exibidos como imagens (`ImageViews`), carregadas dinamicamente com base no nome do tipo.
 
 ## 🛠️ Arquitetura e Tecnologias Utilizadas
 
@@ -60,7 +69,7 @@ A arquitetura do app foi reestruturada para suportar um fluxo de navegação mai
 
 2.  **Clonagem:**
     ```bash
-    git clone https://github.com/EmilioStuart/Pokedex-Mobile.git
+    git clone [https://github.com/EmilioStuart/Pokedex-Mobile.git](https://github.com/EmilioStuart/Pokedex-Mobile.git)
     ```
 
 3.  **Build e Execução:**
